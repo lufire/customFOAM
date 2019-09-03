@@ -12,7 +12,7 @@ Installation instructions:
   wclean all
   wmake all
   ```
-* Within 'solvers/specific_solver' directory:
+* In 'solvers/specific_solver' directory:
   ```sh
   wclean all
   wmake
