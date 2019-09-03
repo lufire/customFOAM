@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.7.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      transportProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+liquidMultiSpeciesTransportModel liquidFickDilutedMixture<constHThermoPhysics>;
+
+binaryDiffusivityModel constant;
+
+constantCoefficients   // Fuller diffusive volume
+{
+  ZnOH4---ZnOH4--	D_ZnOH4--_ZnOH4-- [0 2 -1 0 0 0 0] 2.0e-10;
+  ZnOH4---OH-		D_ZnOH4--_OH- [0 2 -1 0 0 0 0] 2.0e-10;
+  ZnOH4---K+		D_ZnOH4--_OH- [0 2 -1 0 0 0 0] 2.0e-10;
+  ZnOH4---H2O		D_ZnOH4--_H2O [0 2 -1 0 0 0 0] 2.0e-10;
+  OH--ZnOH4--		D_OH-_ZnOH4-- [0 2 -1 0 0 0 0] 4.94e-9;
+  OH--OH-		D_OH-_OH- [0 2 -1 0 0 0 0] 4.94e-9;
+  OH--K+		D_OH-_K+ [0 2 -1 0 0 0 0] 4.94e-9;
+  OH--H2O		D_OH-_H2O [0 2 -1 0 0 0 0] 4.94e-9;
+  K+-ZnOH4--		D_K+_ZnOH4-- [0 2 -1 0 0 0 0] 1.2e-9;
+  K+-OH-		D_K+_OH- [0 2 -1 0 0 0 0] 1.2e-9;
+  K+-K+			D_K+_K+ [0 2 -1 0 0 0 0] 1.2e-9;
+  K+-H2O		D_K+_H2O [0 2 -1 0 0 0 0] 1.2e-9;
+  H2O-ZnOH4--		D_H2O_ZnOH4-- [0 2 -1 0 0 0 0] 2.3e-9;
+  H2O-OH-		D_H2O_OH- [0 2 -1 0 0 0 0] 2.3e-9;
+  H2O-K+		D_H2O_K+ [0 2 -1 0 0 0 0] 2.3e-9;
+  H2O-H2O		D_H2O_H2O [0 2 -1 0 0 0 0] 2.3e-9;
+}
+
+//transportModel   HerschelBulkley;
+transportModel   Newtonian;
+
+nu              nu [0 2 -1 0 0 0 0]  2e-6;
+rho             rho [1 -3 0 0 0 0 0] 1290;
+
+HerschelBulkleyCoeffs
+{
+    tau0            tau0 [0 2 -2 0 0 0 0] 0.00492;
+    k               k [0 2 -1 0 0 0 0] 0.00215;
+    n               n [0 0 0 0 0 0 0] 0.536;
+    nu0	     	    nu0 [0 2 -1 0 0 0 0] 1000;
+    m		    m [0 0 0 0 0 0 0] 100;
+    criticalSR      criticalSR [ 0 0 -1 0 0 0 0] 1e-3;
+}
+
+epsilonR            epsilonR [ 0 0 0 0 0 0 0 ] 25;
+// ************************************************************************* //
