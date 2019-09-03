@@ -1,7 +1,7 @@
 # customFOAM
 Custom solvers and libraries for OpenFOAM (Version 2.3.x)
 
-Prerequisits:
+Prerequisites:
 - OpenFOAM 2.3.x
 - optional: corresponding CFDEM library for particle electrode (cfdemElectrochemicalFoam, newCfdemElectrochemicalFoam)
 
