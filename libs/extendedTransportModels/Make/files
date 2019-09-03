@@ -1,0 +1,25 @@
+viscosityModels/HerschelBulkleyKD/HerschelBulkleyKD.C
+viscosityModels/HerschelBulkleyPapanastasiou/HerschelBulkleyPapanastasiou.C
+viscosityModels/HerschelBulkleyExtended/HerschelBulkleyExtended.C
+viscosityModels/deSouzaMendes/deSouzaMendes.C
+viscosityModels/Polynomial/Polynomial.C
+viscosityModels/Casson/Casson.C
+
+structureModels/structureModel/structureModel.C
+structureModels/structureModel/newStructureModel.C
+structureModels/deSouzaMendesThompsonStructure/deSouzaMendesThompsonStructure.C
+structureModels/PotaninStructure/PotaninStructure.C
+structureModels/SantosStructure/SantosStructure.C
+structureModels/CoussotStructure/CoussotStructure.C
+structureModels/FeierabendStructure/FeierabendStructure.C
+
+rheologyModels/rheologyModel/rheologyModel.C
+rheologyModels/rheologyModel/newRheologyModel.C
+rheologyModels/generalizedNewtonian/generalizedNewtonian.C
+rheologyModels/deSouzaMendesThompson/deSouzaMendesThompson.C
+rheologyModels/Potanin/Potanin.C
+rheologyModels/Santos/Santos.C
+rheologyModels/Coussot/Coussot.C
+rheologyModels/Roussel/Roussel.C
+
+LIB = $(FOAM_USER_LIBBIN)/libextendedTransportModels

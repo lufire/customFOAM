@@ -1,0 +1,3 @@
+explicitCfdemSolverPiso.C
+
+EXE=$(CFDEM_APP_DIR)/explicitCfdemSolverPiso

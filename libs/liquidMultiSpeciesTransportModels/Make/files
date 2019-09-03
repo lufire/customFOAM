@@ -1,0 +1,7 @@
+
+liquidMultiSpeciesTransportModel/liquidMultiSpeciesTransportModel.C
+liquidMultiSpeciesTransportModel/newLiquidMultiSpeciesTransportModel.C
+
+liquidMultiSpeciesTransportModel/liquidMultiSpeciesTransportModels.C
+
+LIB = $(FOAM_USER_LIBBIN)/libliquidMultiSpeciesTransportModels

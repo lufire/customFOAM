@@ -1,0 +1,23 @@
+electrochemistryModel/electrochemistryModel.C
+
+electrolyteModels/electrolyteModel/electrolyteModel.C
+electrolyteModels/electrolyteModel/electrolyteModelNew.C
+electrolyteModels/electrolyteModel/electrolyteModels.C
+
+electrolyteModels/transportModels/diffusivityModels/diffusivityModel/diffusivityModel.C
+electrolyteModels/transportModels/diffusivityModels/constantDiff/constantDiff.C
+electrolyteModels/transportModels/diffusivityModels/polynomialDiff/polynomialDiff.C
+
+electrolyteModels/transportModels/conductivityModels/conductivityModel/conductivityModel.C
+electrolyteModels/transportModels/conductivityModels/constant/constant.C
+electrolyteModels/transportModels/conductivityModels/linearMixture/linearMixture.C
+
+electrodeModels/subModels/resistanceModels/resistanceModel/resistanceModel.C
+electrodeModels/subModels/resistanceModels/porousLayer/porousLayer.C
+
+electrodeModels/electrodeModel/electrodeModel.C
+electrodeModels/electrodeModel/electrodeModelNew.C
+electrodeModels/patchElectrode/patchElectrode.C
+electrodeModels/boundaryPatchElectrode/boundaryPatchElectrode.C
+
+LIB = $(FOAM_USER_LIBBIN)/libelectrochemistryModels
