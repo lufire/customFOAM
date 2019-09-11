@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
         scalar iAvg = 0.0;
         {
             vectorField ilp = mesh.boundary()["currentCollector"].patchField<volVectorField, vector>(il);
-            scalarField Ap = mesh.boundary()["currentCollector"].magSf();
+            //scalarField Ap = mesh.boundary()["currentCollector"].magSf();
             tmp<vectorField> tn = mesh.boundary()["currentCollector"].nf();
             vectorField n = tn();
             scalarField iNormal = ilp&n;

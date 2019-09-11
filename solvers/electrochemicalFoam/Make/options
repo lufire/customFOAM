@@ -10,11 +10,12 @@ EXE_INC = \
     -I$(LIB_SRC)/thermophysicalModels/basic/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/chemistryModel/lnInclude \
     -I$(LIB_SRC)/ODE/lnInclude \
-    -I../../libs/extendedBoundaryConditions/lnInclude \
-    -I../../libs/extendedReactionThermo/lnInclude \
-    -I../../libs/extendedChemistryModels/lnInclude \
-    -I../../libs/electrochemistryModels/lnInclude \
-    -I../../libs/electrochemistryModels/electrodeModels
+    -I$(FOAM_RUN)/../myLibs/extendedBoundaryConditions/lnInclude \
+    -I$(FOAM_RUN)/../myLibs/extendedReactionThermo/lnInclude \
+    -I$(FOAM_RUN)/../myLibs/extendedChemistryModels/lnInclude \
+    -I$(FOAM_RUN)/../myLibs/electrochemistryModels/lnInclude \
+    -I$(FOAM_RUN)/../myLibs/electrochemistryModels/electrodeModels \
+    -DFULLDEBUG -g -O0
 
 EXE_LIBS = \
     -lfiniteVolume \
