@@ -1,0 +1,77 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.2-devel                             |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object 	    il;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 -2 0 0 0 1 0];
+
+internalField   uniform (0.0 0.0 0.0);
+
+boundaryField
+{
+    inlet
+    {
+        type 		    cyclic;
+    	neighbourPatch 	outlet;
+    }
+    outlet
+    {
+        type 		    cyclic;
+    	neighbourPatch 	inlet;
+    }
+    /*
+    currentCollector
+    {
+        type            butlerVolmerCurrent;
+        value           uniform (0 0 0);        
+        electrodeName   anode;
+        electricPotentialField  phiEl;
+        temperatureField    T;        
+        oxidant         ZnOH4--;
+        reductant       OH-;
+        CRefOxidant     200;       
+        CRefReductant   200;        
+        gammaOxidant    1.0;
+        gammaReductant  1.0;
+        exchangeCurrentDensity  10;
+        equilibriumPotential -0.47;
+        electrodePotential  -0.43447;
+        alphaA          1.0;
+        alphaC          1.0;     
+    }
+    */
+
+    
+    currentCollector
+    {
+        type            fixedValue;
+        value           uniform (100 0 0);  
+    }
+    
+
+    separator
+    {
+        type            zeroGradient;
+    }
+ 
+    wall 
+    {
+        type            fixedValue;
+        value           uniform (0.0 0.0 0.0);
+    }
+}
+
+// ************************************************************************* //
