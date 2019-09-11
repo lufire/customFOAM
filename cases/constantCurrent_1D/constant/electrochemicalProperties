@@ -18,6 +18,8 @@ FoamFile
 electrochemistry    on;
 
 currentControl  true;
+
+transportSolver dilute;
 electrodes
 (
 //    anode 
@@ -159,7 +161,8 @@ electrolyteModel
     conductivityModel
     {
         //typeName linearMixture;
-        typeName constant;
+        //typeName constant;
+        typeName NernstPlanck;
         ionicConductivity "kappa" [-1 -3 3 0 0 2 0] 50e-4;
 
         equivalentConductivity
