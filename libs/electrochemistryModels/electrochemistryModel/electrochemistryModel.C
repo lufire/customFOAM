@@ -58,7 +58,7 @@ electrochemistryModel::electrochemistryModel
             IOobject::NO_WRITE
         )
     ),
-    isActive_(false),
+    active_(false),
     currentControl_(false),
     electrolyte_
     (
@@ -74,12 +74,12 @@ electrochemistryModel::electrochemistryModel
     word electrochemSwitch(electrochemDict_.lookup("electrochemistry"));
     if(electrochemSwitch == "on")
     {
-        isActive_ = true;
+        active_ = true;
     }
     word controlSwitch(electrochemDict_.lookup("currentControl"));
     if(controlSwitch == "on")
     {
-        isActive_ = true;
+        active_ = true;
     }
     //Create electrode models
     forAll(electrodeTable_, electrodeI)
@@ -135,7 +135,7 @@ electrochemistryModel::electrochemistryModel
             IOobject::NO_WRITE
         )
     ),
-    isActive_(false),
+    active_(false),
     currentControl_(false),
     electrolyte_
     (
@@ -151,12 +151,12 @@ electrochemistryModel::electrochemistryModel
     word electrochemSwitch(electrochemDict_.lookup("electrochemistry"));
     if(electrochemSwitch == "on")
     {
-        isActive_ = true;
+        active_ = true;
     }
     word controlSwitch(electrochemDict_.lookup("currentControl"));
     if(controlSwitch == "on")
     {
-        isActive_ = true;
+        active_ = true;
     }
     //Create electrode models
     forAll(electrodeTable_, electrodeI)

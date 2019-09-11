@@ -74,7 +74,7 @@ class electrochemistryModel
         const IOdictionary electrochemDict_;
 
         //- Bool to set chemistry model active 
-        bool isActive_;
+        bool active_;
 
         //- Bool to set chemistry model active 
         bool currentControl_;
@@ -122,6 +122,9 @@ public:
 
 
     // Member Functions
+
+        //- Return const reference to electrochemical IO dictionary 
+        inline const IOdictionary& dict() const;
 
         //- Return the const mass-fraction field for a specie given by index
         inline const electrolyteModels::electrolyteModel& electrolyte() const;

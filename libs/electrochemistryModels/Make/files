@@ -11,12 +11,15 @@ electrolyteModels/transportModels/diffusivityModels/polynomialDiff/polynomialDif
 electrolyteModels/transportModels/conductivityModels/conductivityModel/conductivityModel.C
 electrolyteModels/transportModels/conductivityModels/constant/constant.C
 electrolyteModels/transportModels/conductivityModels/linearMixture/linearMixture.C
+electrolyteModels/transportModels/conductivityModels/NernstPlanck/NernstPlanck.C
+
 
 electrodeModels/subModels/resistanceModels/resistanceModel/resistanceModel.C
 electrodeModels/subModels/resistanceModels/porousLayer/porousLayer.C
 
 electrodeModels/electrodeModel/electrodeModel.C
 electrodeModels/electrodeModel/electrodeModelNew.C
+electrodeModels/cfdemPorousElectrode/cfdemPorousElectrode.C
 electrodeModels/patchElectrode/patchElectrode.C
 electrodeModels/boundaryPatchElectrode/boundaryPatchElectrode.C
 

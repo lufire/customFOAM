@@ -29,6 +29,12 @@ namespace Foam
 namespace electrochemistryModels 
 {
 
+inline const IOdictionary& 
+electrochemistryModel::dict() const
+{
+    return electrochemDict_;
+}
+
 inline const electrolyteModels::electrolyteModel& 
 electrochemistryModel::electrolyte() const
 {
@@ -97,7 +103,7 @@ electrochemistryModel::electrode
 inline bool 
 electrochemistryModel::active() 
 {
-    return isActive_;
+    return active_;
 }
 
 } // End namespace electrochemistryModels 
