@@ -1,5 +1,3 @@
-include $(CFDEM_ADD_LIBS_DIR)/additionalLibs
-
 EXE_INC = \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
 	-I$(LIB_SRC)/meshTools/lnInclude \
@@ -8,19 +6,14 @@ EXE_INC = \
     -I$(LIB_SRC)/thermophysicalModels/specie/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/reactionThermo/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/chemistryModel/lnInclude \
-    -I$(CFDEM_SRC_DIR)/lagrangian/cfdemParticle/lnInclude \
     -I$(LIB_SRC)/turbulenceModels/incompressible/turbulenceModel \
     -I$(LIB_SRC)/transportModels \
-    -I$(FOAM_RUN)/../myLibs/extendedReactionThermo/lnInclude \
-    -I$(FOAM_RUN)/../myLibs/extendedChemistryModels/lnInclude \
-    -DFULLDEBUG -g -O0
+    -I../extendedReactionThermo/lnInclude \
+    -I../extendedChemistryModels/lnInclude 
 
 LIB_LIBS = \
     -lfiniteVolume \
 	-lmeshTools \
     -lconcReactionThermophysicalModels \
     -lextendedChemistryModel \
-    -L$(CFDEM_LIB_DIR) \
-    -l$(CFDEM_LIB_NAME) \
-     $(CFDEM_ADD_LIB_PATHS) \
-     $(CFDEM_ADD_LIBS)
+    -L$(FOAM_USER_LIBBIN)

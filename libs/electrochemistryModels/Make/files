@@ -19,7 +19,6 @@ electrodeModels/subModels/resistanceModels/porousLayer/porousLayer.C
 
 electrodeModels/electrodeModel/electrodeModel.C
 electrodeModels/electrodeModel/electrodeModelNew.C
-electrodeModels/cfdemPorousElectrode/cfdemPorousElectrode.C
 electrodeModels/patchElectrode/patchElectrode.C
 electrodeModels/boundaryPatchElectrode/boundaryPatchElectrode.C
 
