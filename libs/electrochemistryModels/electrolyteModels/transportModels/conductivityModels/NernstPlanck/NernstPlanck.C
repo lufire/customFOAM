@@ -77,8 +77,8 @@ void NernstPlanck::update()
     kappa_ *= 0.0;
     forAll(C_, speciesI)
     {
-        kappa_ += z_[speciesI]*z_[speciesI]*D_[speciesI]*C_[speciesI];
-        kappa_ *= F*F/(R*T);
+        kappa_ += F*F/(R*T)*z_[speciesI]*z_[speciesI]*D_[speciesI]*C_[speciesI];
+        //kappa_ *= F*F/(R*T);
     }
 }
 
