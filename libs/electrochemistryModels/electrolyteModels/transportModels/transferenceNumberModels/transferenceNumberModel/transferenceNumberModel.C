@@ -26,7 +26,7 @@ License
 
 //#include "diffusivityModel.H"
 #include "electrolyteModel.H"
-#include "conductivityModel.H"
+#include "transferenceNumberModel.H"
 //#include "volFields.H"
 
 namespace Foam
@@ -36,13 +36,13 @@ namespace electrochemistryModels
 namespace electrolyteModels
 {
 
-defineTypeNameAndDebug(conductivityModel, 0);
-defineRunTimeSelectionTable(conductivityModel, dictionary);
-defineRunTimeSelectionTable(conductivityModel, constant);
+defineTypeNameAndDebug(transferenceNumberModel, 0);
+defineRunTimeSelectionTable(transferenceNumberModel, dictionary);
+defineRunTimeSelectionTable(transferenceNumberModel, constant);
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-conductivityModel::conductivityModel
+transferenceNumberModel::transferenceNumberModel
 (
     const dictionary& dict,
     const electrolyteModel& electrolyte 
@@ -50,29 +50,31 @@ conductivityModel::conductivityModel
 :
     dict_(dict),
     mesh_(electrolyte.thermo().T().mesh()),
-    thermo_(electrolyte.thermo()),
     species_(electrolyte.thermo().composition().species()),
-    kappa_
-    (
-        IOobject
+    t_(species_.size())
+{
+    forAll(t_,i)
+    {
+        t_.set
         (
-            "kappa",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar
-        (
-            "kappa",
-            sqr(dimCurrent)*pow3(dimTime)/(dimVol*dimMass),
-            0.0
-        )
-    )
-{}
+            i, new volScalarField
+            (
+                IOobject
+                (
+                    "t_" + species_[i],
+                    mesh_.time().timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                mesh_,
+                dimensionedScalar("t", dimless, 0.0)
+            )
+        );
+    }
+}
 
-conductivityModel::conductivityModel
+transferenceNumberModel::transferenceNumberModel
 (
     const dictionary& dict,
     const concReactionThermo& thermo
@@ -80,29 +82,31 @@ conductivityModel::conductivityModel
 :
     dict_(dict),
     mesh_(thermo.T().mesh()),
-    thermo_(thermo),
     species_(thermo.composition().species()),
-    kappa_
-    (
-        IOobject
+    t_(species_.size())
+{
+    forAll(t_,i)
+    {
+        t_.set
         (
-            "kappa",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar
-        (
-            "kappa",
-            sqr(dimCurrent)*pow3(dimTime)/(dimVol*dimMass),
-            0.0
-        )
-    )
-{}
+            i, new volScalarField
+            (
+                IOobject
+                (
+                    "t_" + species_[i],
+                    mesh_.time().timeName(),
+                    mesh_,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE
+                ),
+                mesh_,
+                dimensionedScalar("t", dimless, 0.0)
+            )
+        );
+    }
+}
 
-//conductivityModel::conductivityModel
+//transferenceNumberModel::transferenceNumberModel
 //(
 //    const dictionary& dict,
 //    const concReactionThermo& thermo,
@@ -135,7 +139,7 @@ conductivityModel::conductivityModel
 
 // * * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * //
 
-autoPtr<conductivityModel> conductivityModel::New
+autoPtr<transferenceNumberModel> transferenceNumberModel::New
 (
     const dictionary& dict,
     const electrolyteModel& electrolyte 
@@ -150,20 +154,20 @@ autoPtr<conductivityModel> conductivityModel::New
     {
         FatalErrorIn
         (
-            "conductivityModel::New(const dictionary&, "
+            "transferenceNumberModel::New(const dictionary&, "
             "const electrolyteModel&)"
-        )   << "Unknown conductivityModel type "
+        )   << "Unknown transferenceNumberModel type "
             << modelType << endl << endl
-            << "Valid conductivityModels are : " << endl
+            << "Valid transferenceNumberModels are : " << endl
             << dictionaryConstructorTablePtr_->toc()
             << exit(FatalError);
     }
 
-    return autoPtr<conductivityModel>
+    return autoPtr<transferenceNumberModel>
         (cstrIter()(dict, electrolyte));
 }
 
-autoPtr<conductivityModel> conductivityModel::New
+autoPtr<transferenceNumberModel> transferenceNumberModel::New
 (
     const dictionary& dict,
     const concReactionThermo& thermo
@@ -178,20 +182,20 @@ autoPtr<conductivityModel> conductivityModel::New
     {
         FatalErrorIn
         (
-            "conductivityModel::New(const dictionary&, "
+            "transferenceNumberModel::New(const dictionary&, "
             "const concReactionThermo&)"
-        )   << "Unknown conductivityModel type "
+        )   << "Unknown transferenceNumberModel type "
             << modelType << endl << endl
-            << "Valid conductivityModels are : " << endl
+            << "Valid transferenceNumberModels are : " << endl
             << constantConstructorTablePtr_->toc()
             << exit(FatalError);
     }
 
-    return autoPtr<conductivityModel>
+    return autoPtr<transferenceNumberModel>
         (cstrIter()(dict, thermo));
 }
 
-//autoPtr<conductivityModel> conductivityModel::New
+//autoPtr<transferenceNumberModel> transferenceNumberModel::New
 //(
 //    const dictionary& dict,
 //    const concReactionThermo& thermo,
@@ -207,16 +211,16 @@ autoPtr<conductivityModel> conductivityModel::New
 //    {
 //        FatalErrorIn
 //        (
-//            "conductivityModel::New(const dictionary&, "
+//            "transferenceNumberModel::New(const dictionary&, "
 //            "const volScalarField&, const concReactionThermo&, PtrList<label>&)"
-//        )   << "Unknown conductivityModel type "
+//        )   << "Unknown transferenceNumberModel type "
 //            << modelType << endl << endl
-//            << "Valid conductivityModels are : " << endl
+//            << "Valid transferenceNumberModels are : " << endl
 //            << dictionaryConstructorTablePtr_->toc()
 //            << exit(FatalError);
 //    }
 //
-//    return autoPtr<conductivityModel>
+//    return autoPtr<transferenceNumberModel>
 //        (cstrIter()(dict, thermo, z));
 //}
 

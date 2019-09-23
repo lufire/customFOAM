@@ -111,37 +111,6 @@ linearMixture::linearMixture
 
     }
 
-    speciesKappa_.setSize(species_.size());
-    forAll(speciesKappa_,i)
-    {
-        if(z_[i] != 0)
-        {
-            speciesKappa_.set
-            (
-                i, 
-                new dimensionedScalar
-                (
-                    dict.subDict("speciesConductivity")
-                        .lookup(species_[i])
-                )
-            );
-        }
-        else
-        {
-            speciesKappa_.set
-            (
-                i, 
-                new dimensionedScalar
-                (
-                    "zero",
-                    sqr(dimCurrent)*pow3(dimTime)/(dimMoles*dimMass),
-                    0.0
-                )
-            );
-        }
-
-    }
-
     X_.setSize(species_.size());
     forAll(X_,i)
     {
@@ -186,19 +155,7 @@ void linearMixture::update()
         mesh_,
         dimensionedScalar("oneC", dimMoles/dimVol, 1.0)
     );
-    volScalarField one 
-    (                
-        IOobject
-        (
-            "one",
-            mesh_.time().timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar("one", pow3(dimTime)/dimVol/dimMass*sqr(dimCurrent), 1.0)
-    );
+
     for(label i = 1; i<X_.size(); ++i)
     {
         if(i != balanceIndex_ && z_[i] != 0)
@@ -227,20 +184,7 @@ void linearMixture::update()
     {
         lambda += X_[i]*lambda_[i];
     }
-
     kappa_ = lambda*(C_[balanceIndex_]+oneC*SMALL);
-
-    volScalarField rt(C_[0]*abs(z_[0])*speciesKappa_[0]);
-    for(label i = 1; i<C_.size(); ++i)
-    {
-        rt += C_[i]*abs(z_[i])*speciesKappa_[i];
-    }
-
-    forAll(t_,i)
-    {
-        t_[i] = C_[i]*abs(z_[i])*speciesKappa_[i]/(rt+one*SMALL);
-        //t_[i] = X_[i]*speciesKappa_[i]/lambda;
-    }
 }
 
 } // End namespace electrolyteModels 

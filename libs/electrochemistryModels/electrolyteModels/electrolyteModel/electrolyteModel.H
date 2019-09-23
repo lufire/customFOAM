@@ -49,6 +49,7 @@ SourceFiles
 #include "concReactionThermo.H"
 #include "diffusivityModel.H"
 #include "conductivityModel.H"
+#include "transferenceNumberModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -118,6 +119,9 @@ protected:
 
         //- Ionic conductivity model 
         autoPtr<conductivityModel> kappaModel_;
+
+        //- Transference number conductivity model 
+        autoPtr<transferenceNumberModel> transNumberModel_;
 
         //- Electric potential field of electrolyte 
         volScalarField phiE_;
@@ -267,6 +271,9 @@ public:
             
             //- Return reference to the conductivity model
             inline const conductivityModel& kappaModel() const;
+
+            //- Return reference to the conductivity model
+            inline const transferenceNumberModel& transNumberModel() const;
 
             //- Return const reference to electric potential field
             inline const volScalarField& phiE() const;

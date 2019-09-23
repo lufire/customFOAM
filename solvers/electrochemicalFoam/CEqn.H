@@ -1,9 +1,8 @@
 {
     // Update effective diffusion coefficients 
-    forAll(D, speciesI)
+    forAll(D, i)
     {
-        Deff[speciesI] = D[speciesI];
-        //mu[speciesI] = Deff[speciesI]/(R*T);
+        Deff[i] = D[i];
     }
     //reaction->correct();
     //dQ = reaction->dQ();
@@ -16,100 +15,121 @@
     //volScalarField iSource = electrodes[0].stoichCoeff(0)
     //    /(electrodes[0].electronNumber()*F)*electrodes[0].iTrans();
 
-    forAll(C, speciesI)
+    forAll(C, i)
     {
 
-        //volScalarField& Yi = Y[speciesI];       
-        //if (Y[speciesI].name() != inertSpecie)
-        if (Y[speciesI].name() == electrolyte.inertSpecies())
+        //volScalarField& Yi = Y[i];       
+        //if (Y[i].name() != inertSpecie)
+        if (Y[i].name() == electrolyte.inertSpecies())
         {
-            inertIndex = speciesI;
+            inertIndex = i;
         }
-        else if (Y[speciesI].name() == electrolyte.balanceSpecies())
+        else if (Y[i].name() == electrolyte.balanceSpecies())
         {
-            balanceIndex = speciesI;
+            balanceIndex = i;
         }
         else
         {
-
-            //dimensionedScalar Pe = u_ref*L_ref/Deff[speciesI];
-            
-            surfaceScalarField snGrad = 
+            volScalarField& Ci = C[i];
+            if (transportSolver == "dilute")
+            {
+                mu[i] = Deff[i]/(R*T);
+                surfaceScalarField zmuFEf 
                 (
-                    phi*fvc::interpolate(C[speciesI])
-                    -(mesh.Sf() & fvc::interpolate(N[speciesI]))
-                    -(mesh.Sf() 
-                     & fvc::interpolate(
-                            t[speciesI]/(z[speciesI]*F),
-                            "interpolate(t)")
-                         *fvc::interpolate(il))
-                )/(mesh.magSf()*fvc::interpolate(
-                        Deff[speciesI],
-                        "interpolate(D)"));
-            
-            setSnGrad<calculatedGradientFvPatchScalarField>
-            (
-                C[speciesI].boundaryField(),
-                snGrad.boundaryField()
-            );
+                    "zmuFEf", 
+                    (
+                        (fvc::interpolate(z[i]*mu[i]*F*E, "interpolate(zmuFE)")
+                         & mesh.Sf())
+                    )
+                );
 
-            volScalarField& Ci = C[speciesI];
-            fvScalarMatrix CiEqn
-            (
-                fvm::ddt(Ci)
-              + fvm::div(phi, Ci) 
-              //+ mvConvection->fvmDiv(phi, Ci) 
-              //- fvm::Sp(fvc::div(phi), Ci)
-              - fvm::laplacian
+                // Set surface normal gradient for boundary field
+                surfaceScalarField snGrad = 
+                    (
+                        phi*fvc::interpolate(Ci)
+                        -(mesh.Sf() & fvc::interpolate(N[i]))
+                        -(zmuFEf * fvc::interpolate(Ci))
+                    )/(mesh.magSf()*fvc::interpolate(Deff[i], "interpolate(D)"));
+                
+                setSnGrad<calculatedGradientFvPatchScalarField>
                 (
-                    Deff[speciesI],Ci, "laplacian(D,Ci)"
-                )
-              //+ fvm::div(zmuFEf,Ci, "div(zmuFEf,Ci)")
-                ==
-              - fvc::div(t[speciesI]/(z[speciesI]*F)*il)
-              //- fvc::div(Ni)
-              //- iSource
-              + fvOptions(Ci)
-              //  gamma/M[speciesI]
-              //  *mstm().RR(Y[speciesI].name(), chemistry, speciesI)
-            );
-            //Info << "iSource[0]: " << iSource[0] << endl;
-            //Info << "iSource[1]: " << iSource[1] << endl;
-            CiEqn.relax();
+                    Ci.boundaryField(),
+                    snGrad.boundaryField()
+                );
 
-            fvOptions.constrain(CiEqn);
+                // Species transport equation
+                fvScalarMatrix CiEqn
+                (
+                    fvm::ddt(Ci)
+                  + fvm::div(phi, Ci) 
+                  - fvm::laplacian(Deff[i],Ci, "laplacian(D,Ci)")
+                  + fvm::div(zmuFEf,Ci, "div(zmuFEf,Ci)")
+                    ==
+                    fvOptions(Ci)
+                );
+                CiEqn.relax();
+                fvOptions.constrain(CiEqn);
+                CiEqn.solve(mesh.solver("Ci"));
+            }
+            else
+            {
+                // Set surface normal gradient for boundary field
+                surfaceScalarField snGrad = 
+                    (
+                        phi*fvc::interpolate(Ci)
+                        -(mesh.Sf() & fvc::interpolate(N[i]))
+                        -(mesh.Sf() 
+                         & fvc::interpolate(t[i]/(z[i]*F), "interpolate(t)")
+                             *fvc::interpolate(il))
+                    )/(mesh.magSf()*fvc::interpolate(Deff[i], "interpolate(D)"));
+                
+                setSnGrad<calculatedGradientFvPatchScalarField>
+                (
+                    Ci.boundaryField(),
+                    snGrad.boundaryField()
+                );
 
-            CiEqn.solve(mesh.solver("Ci"));
-            //C[speciesI] = Ci*C_ref;
+                // Species transport equation
+                fvScalarMatrix CiEqn
+                (
+                    fvm::ddt(Ci)
+                  + fvm::div(phi, Ci) 
+                  - fvm::laplacian(Deff[i],Ci, "laplacian(D,Ci)")
+                    ==
+                    fvc::div(t[i]/(z[i]*F)*il)
+                  + fvOptions(Ci)
+                );
+                CiEqn.relax();
+                fvOptions.constrain(CiEqn);
+                CiEqn.solve(mesh.solver("Ci"));
+            }
+
 
             Ci.correctBoundaryConditions();
-
-
             fvOptions.correct(Ci);
             Ci.max(SMALL);
-            
 
-            zC += z[speciesI]*Ci;
+            zC += z[i]*Ci;
             
             // Calculate species mass fraction
-            Y[speciesI] = Ci*M[speciesI]/rho;
-            Yt += Y[speciesI];
+            Y[i] = Ci*M[i]/rho;
+            Yt += Y[i];
         }
-        //if (Y[speciesI].name() != inertSpecie
-        //    && z[speciesI] != 0
+        //if (Y[i].name() != inertSpecie
+        //    && z[i] != 0
         //    && chargedSpeciesCount == nChargedSpecies)
         //{
-        //    volScalarField& Ci = C[speciesI];
-        //    Ci = -zC/z[speciesI];
+        //    volScalarField& Ci = C[i];
+        //    Ci = -zC/z[i];
         //    Ci.correctBoundaryConditions();
         //    fvOptions.correct(Ci);
         //    Ci.max(0.0);
 
         //    // Calculate species mass fraction
-        //    Y[speciesI] = Ci*M[speciesI]/rho;
-        //    Yt += Y[speciesI];
+        //    Y[i] = Ci*M[i]/rho;
+        //    Yt += Y[i];
         //}
-   }
+    }
 
     forAll(electrodes, electrodeI)
     {
@@ -127,16 +147,16 @@
         Yt += Y[balanceIndex];
     }
   
-    //forAll(C,speciesI)
+    //forAll(C,i)
     //{
-    //    if (Y[speciesI].name() != inertSpecie
-    //        && z[speciesI] != 0)
+    //    if (Y[i].name() != inertSpecie
+    //        && z[i] != 0)
     //    {
-    //        N[speciesI] = 
-    //           U*C[speciesI] 
-    //           -Deff[speciesI]*fvc::grad(C[speciesI])
-    //           -t[speciesI]/(z[speciesI]*F)*il;
-    //        N[speciesI].correctBoundaryConditions();
+    //        N[i] = 
+    //           U*C[i] 
+    //           -Deff[i]*fvc::grad(C[i])
+    //           -t[i]/(z[i]*F)*il;
+    //        N[i].correctBoundaryConditions();
     //    }
     //}
     //forAll(electrodes, electrodeI)

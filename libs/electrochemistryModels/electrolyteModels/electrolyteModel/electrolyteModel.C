@@ -87,6 +87,7 @@ electrolyteModel::electrolyteModel
     z_(species_.size()),
     diffModel_(),
     kappaModel_(),
+    transNumberModel_(),
     phiE_
     (
         IOobject
@@ -225,6 +226,14 @@ electrolyteModel::electrolyteModel
         conductivityModel::New
         (
             dict.subDict("conductivityModel"),
+            *this
+        ).ptr()
+    );
+    transNumberModel_.set
+    (
+        transferenceNumberModel::New
+        (
+            dict.subDict("transferenceNumberModel"),
             *this
         ).ptr()
     );

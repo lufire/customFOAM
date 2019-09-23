@@ -151,7 +151,7 @@ void porousLayer::correctSpecies()
         electrode_.electrolyte().i();
 
     const PtrList<volScalarField>& t =
-        electrode_.electrolyte().kappaModel().t();
+        electrode_.electrolyte().transNumberModel().t();
 
     const PtrList<label>& z =
         electrode_.electrolyte().z();

@@ -23,20 +23,20 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    Foam::binaryConductivityModels::linearMixture
+    Foam::binaryConductivityModels::speciesConductivity
 
 Description
     Constant binary conductivity model.
 
 SourceFiles
-    linearMixture.C
+    speciesConductivity.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef linearMixture_H
-#define linearMixture_H
+#ifndef speciesConductivity_H
+#define speciesConductivity_H
 
-#include "conductivityModel.H"
+#include "transferenceNumberModel.H"
 //#include "dimensionedScalar.H"
 //#include "volFields.H"
 
@@ -51,12 +51,12 @@ namespace electrolyteModels
 
 
 /*---------------------------------------------------------------------------*\
-                           Class linearMixture Declaration
+                           Class speciesConductivity Declaration
 \*---------------------------------------------------------------------------*/
 
-class linearMixture
+class speciesConductivity
 :
-    public conductivityModel
+    public transferenceNumberModel
 {
     // Private data
       
@@ -72,20 +72,26 @@ class linearMixture
         //- List of equivalent conductivites
         PtrList<dimensionedScalar> lambda_; 
 
+        //- List of ionic conductivites at infinite solution 
+        PtrList<dimensionedScalar> speciesKappa_; 
+
         //- List of equivalent conductivites
         PtrList<volScalarField> X_; 
+  
+        //- List of transference numbers 
+        //PtrList<volScalarField> t_; 
   
   
 public:
 
     //- Runtime type information
-    TypeName("linearMixture");
+    TypeName("speciesConductivity");
 
 
     // Constructors
 
         //- construct from components
-        linearMixture
+        speciesConductivity
         (
             const dictionary& dict,
             const electrolyteModel& electrolyte 
@@ -93,12 +99,18 @@ public:
 
     // Destructor
 
-        ~linearMixture()
+        ~speciesConductivity()
         {}
 
 
     // Member Functions
    
+        // Return transfernce numbers 
+        //inline const PtrList<volScalarField>&  t() const
+        //{
+        //    return t_;
+        //}
+
         //- Calculate conductivity 
         virtual void update();
 };

@@ -26,11 +26,11 @@ stopAt          endTime;
 
 endTime         1; 
 
-deltaT          1e-3;
+deltaT          1e-2;
 
 writeControl    timeStep; //adjustableRunTime;//
 
-writeInterval   100;//10;//0.05;//
+writeInterval   10;//10;//0.05;//
 
 purgeWrite      0;
 
@@ -58,7 +58,7 @@ libs
     "libextendedBoundaryConditions.so"
     "libextendedChemistryModel.so"
     "libelectrochemistryModels.so"
-    //"libvolWeighted.so"
+    "libvolWeighted.so"
     //"libconcReactionThermophysicalModels.so"
 );
 

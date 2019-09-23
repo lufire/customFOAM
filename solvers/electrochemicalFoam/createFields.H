@@ -236,10 +236,11 @@ volVectorField E
 const volScalarField& kappa(electrolyte.kappa());
 const PtrList<volScalarField>& D(electrolyte.D());
 const PtrList<label>& z = electrolyte.z();
-const PtrList<volScalarField>& t = electrolyte.kappaModel().t();
+const PtrList<volScalarField>& t = electrolyte.transNumberModel().t();
 PtrList<dimensionedScalar> M(C.size());
 PtrList<volVectorField>& N = electrolyte.N();
 PtrList<volScalarField> Deff(D.size());
+PtrList<volScalarField> mu(D.size());
 
 // Species molar weight in kg/mol
 forAll(Y, speciesI)
@@ -270,11 +271,11 @@ forAll(Y, speciesI)
             D[speciesI]
         )
     );
-    //mu.set
-    //(
-    //    speciesI,
-    //    new volScalarField(Deff[speciesI]/(R*T))
-    //);
+    mu.set
+    (
+        speciesI,
+        new volScalarField(Deff[speciesI]/(R*T))
+    );
 }
 
 label nChargedSpecies = 0;

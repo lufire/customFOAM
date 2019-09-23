@@ -19,36 +19,36 @@
         // Explicitly calculate electric current density due to diffusion flux
         id *= 0.0;
         surfaceVectorField nHat = mesh.Sf()/mesh.magSf();
-        forAll(Y, speciesI)
+        forAll(Y, i)
         {
-            if (z[speciesI] != 0)
+            if (z[i] != 0)
             {
-                volVectorField gradC = fvc::grad(C[speciesI]);
+                volVectorField gradC = fvc::grad(C[i]);
                 forAll(gradC.boundaryField(), patchI)
                 {
                     gradC.boundaryField()[patchI] = 
-                        C[speciesI].boundaryField()[patchI].snGrad()()
+                        C[i].boundaryField()[patchI].snGrad()()
                         * nHat.boundaryField()[patchI];
                 }
                 if (transportSolver == "dilute")
                 {
-                    id -= F*z[speciesI]*Deff[speciesI]*gradC;
+                    id -= F*z[i]*Deff[i]*gradC;
                 }
                 else
                 {
-                    id += kappa/F*t[speciesI]/z[speciesI]
-                       *R*T/C[speciesI]*gradC;
+                    id += kappa/F*t[i]/z[i]
+                       *R*T/C[i]*gradC;
                 }
             }
         }
         
         // Calculate charge density
         rhoE *= 0.0;
-        forAll(Y, speciesI)
+        forAll(Y, i)
         {
-            if (Y[speciesI].name() != inertSpecie)
+            if (Y[i].name() != inertSpecie)
             {
-                rhoE += F*z[speciesI]*C[speciesI];
+                rhoE += F*z[i]*C[i];
             }
         }
 
@@ -111,26 +111,26 @@
     }
 
     // Explicitly calculate species fluxes
-    forAll(Y, speciesI)
+    forAll(Y, i)
     {
-        if (Y[speciesI].name() != inertSpecie
-            && z[speciesI] != 0)
+        if (Y[i].name() != inertSpecie
+            && z[i] != 0)
         {
             if (transportSolver == "dilute")
             {
-                N[speciesI] = 
-                   U*C[speciesI] 
-                   -Deff[speciesI]*fvc::grad(C[speciesI])
-                   +z[speciesI]*Deff[speciesI]/(R*T)*F*E*C[speciesI];
+                N[i] = 
+                   U*C[i] 
+                   -Deff[i]*fvc::grad(C[i])
+                   +z[i]*Deff[i]/(R*T)*F*E*C[i];
             }
             else
             {
-                N[speciesI] = 
-                   U*C[speciesI] 
-                   -Deff[speciesI]*fvc::grad(C[speciesI])
-                   -t[speciesI]/(z[speciesI]*F)*il;
+                N[i] = 
+                   U*C[i] 
+                   -Deff[i]*fvc::grad(C[i])
+                   -t[i]/(z[i]*F)*il;
             }
-            N[speciesI].correctBoundaryConditions();
+            N[i].correctBoundaryConditions();
         }
     }
     forAll(electrodes, electrodeI)

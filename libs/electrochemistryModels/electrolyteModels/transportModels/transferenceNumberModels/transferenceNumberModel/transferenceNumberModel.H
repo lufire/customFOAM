@@ -23,18 +23,18 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    Foam::conductivityModel
+    Foam::transferenceNumberModel
 
 Description
     Conductivity model for multispecies binary diffusion coefficients 
 
 SourceFiles
-    conductivityModel.C
+    transferenceNumberModel.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef conductivityModel_H
-#define conductivityModel_H
+#ifndef transferenceNumberModel_H
+#define transferenceNumberModel_H
 
 //#include "specie.H"
 #include "IOdictionary.H"
@@ -65,10 +65,10 @@ namespace electrolyteModels
 class electrolyteModel;
 
 /*---------------------------------------------------------------------------*\
-                    Class conductivityModel Declaration
+                    Class transferenceNumberModel Declaration
 \*---------------------------------------------------------------------------*/
 
-class conductivityModel
+class transferenceNumberModel
 {
 
 protected:
@@ -81,35 +81,32 @@ protected:
         //- Mesh
         const fvMesh& mesh_;
 
-        //- Thermo object
-        const concReactionThermo& thermo_;
-
         //- Species table
         const speciesTable& species_;
 
-        //- Ionic conductivity
-        volScalarField kappa_;
+        //- List of transference numbers 
+        PtrList<volScalarField> t_; 
 
     // Private Member Functions
 
         //- Disallow copy construct
-        conductivityModel(const conductivityModel&);
+        transferenceNumberModel(const transferenceNumberModel&);
 
         //- Disallow default bitwise assignment
-        void operator=(const conductivityModel&);
+        void operator=(const transferenceNumberModel&);
 
 
 public:
 
     //- Runtime type information
-    TypeName("conductivityModel");
+    TypeName("transferenceNumberModel");
 
     // Declare run-time constructor selection table
     //
         declareRunTimeSelectionTable
         (
             autoPtr,
-            conductivityModel,
+            transferenceNumberModel,
             dictionary,
             (
                 const dictionary& dict,
@@ -121,7 +118,7 @@ public:
         declareRunTimeSelectionTable
         (
             autoPtr,
-            conductivityModel,
+            transferenceNumberModel,
             constant,
             (
                 const dictionary& dict,
@@ -133,7 +130,7 @@ public:
         //declareRunTimeSelectionTable
         //(
         //    autoPtr,
-        //    conductivityModel,
+        //    transferenceNumberModel,
         //    dictionary,
         //    (
         //        const dictionary& dict,
@@ -145,19 +142,19 @@ public:
 
     // Selectors
 
-        static autoPtr<conductivityModel> New
+        static autoPtr<transferenceNumberModel> New
         (
             const dictionary& dict,
             const electrolyteModel& electrolyte 
         );
 
-        static autoPtr<conductivityModel> New
+        static autoPtr<transferenceNumberModel> New
         (
             const dictionary& dict,
             const concReactionThermo& thermo
         );
 
-        //static autoPtr<conductivityModel> New
+        //static autoPtr<transferenceNumberModel> New
         //(
         //    const dictionary& dict,
         //    const concReactionThermo& thermo,
@@ -167,19 +164,19 @@ public:
     // Constructors
 
         //- Construct from components
-        conductivityModel
+        transferenceNumberModel
         (
             const dictionary& dict,
             const electrolyteModel& electrolyte 
         );
 
-        conductivityModel
+        transferenceNumberModel
         (
             const dictionary& dict,
             const concReactionThermo& thermo
         );
 
-        //conductivityModel
+        //transferenceNumberModel
         //(
         //    const dictionary& dict,
         //    const concReactionThermo& thermo,
@@ -188,15 +185,17 @@ public:
 
     // Destructor
 
-        virtual ~conductivityModel()
+        virtual ~transferenceNumberModel()
         {}
 
     // Member Functions
 
-        inline tmp<volScalarField> kappa() const
+        // Return transference numbers 
+        inline const PtrList<volScalarField>&  t() const
         {
-            return kappa_;
+            return t_;
         }
+        //virtual const PtrList<volScalarField>& t() const;
 
         //- Calculate conductivity 
         virtual void update() = 0;

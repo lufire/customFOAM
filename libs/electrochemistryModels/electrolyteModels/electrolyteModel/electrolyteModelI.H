@@ -139,6 +139,12 @@ electrolyteModel::kappaModel() const
     return kappaModel_();
 }
 
+inline const transferenceNumberModel& 
+electrolyteModel::transNumberModel() const
+{
+    return transNumberModel_();
+}
+
 inline const volScalarField&
 electrolyteModel::phiE() const 
 {

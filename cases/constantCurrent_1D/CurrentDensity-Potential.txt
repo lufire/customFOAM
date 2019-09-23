@@ -1,1 +1,1 @@
-Average cell current density: -998.75
+Average cell current density: -0

@@ -17,7 +17,7 @@ FoamFile
 
 dimensions      [0 -3 0 0 1 0 0];
 
-internalField   uniform 7400;
+internalField   uniform 7000;
 
 boundaryField
 {
@@ -29,14 +29,14 @@ boundaryField
     currentCollector 
     {
         type            electroNeutrality;
-        value           uniform 7400;
+        value           uniform 7000;
         zCField         "zC";
     }    
 
     separator
     {
         type            electroNeutrality;
-        value           uniform 7400;
+        value           uniform 7000;
         zCField         "zC";
     }
 
