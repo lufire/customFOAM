@@ -1,25 +1,23 @@
 {
-    // Update effective diffusion coefficients 
-    forAll(D, i)
-    {
-        Deff[i] = D[i];
-    }
     //reaction->correct();
     //dQ = reaction->dQ();
     label inertIndex = -1;
     label balanceIndex = -1;
     volScalarField Yt(0.0*Y[0]);
     zC *= 0.0;
-    //il *= 0.0;
     
+    //Update effective transport properties 
+    forAll(D, i)
+    {
+        Deff[i] = D[i];
+        mu[i] = Deff[i]/(R*T);
+    }
     //volScalarField iSource = electrodes[0].stoichCoeff(0)
     //    /(electrodes[0].electronNumber()*F)*electrodes[0].iTrans();
 
     forAll(C, i)
     {
 
-        //volScalarField& Yi = Y[i];       
-        //if (Y[i].name() != inertSpecie)
         if (Y[i].name() == electrolyte.inertSpecies())
         {
             inertIndex = i;
@@ -31,9 +29,11 @@
         else
         {
             volScalarField& Ci = C[i];
+            Ci.storePrevIter();
+
+
             if (transportSolver == "dilute")
             {
-                mu[i] = Deff[i]/(R*T);
                 surfaceScalarField zmuFEf 
                 (
                     "zmuFEf", 
@@ -48,8 +48,8 @@
                     (
                         phi*fvc::interpolate(Ci)
                         -(mesh.Sf() & fvc::interpolate(N[i]))
-                        -(zmuFEf * fvc::interpolate(Ci))
-                    )/(mesh.magSf()*fvc::interpolate(Deff[i], "interpolate(D)"));
+                        +(zmuFEf * fvc::interpolate(Ci))
+                    )/(mesh.magSf()*fvc::interpolate(Deff[i]));
                 
                 setSnGrad<calculatedGradientFvPatchScalarField>
                 (
@@ -61,19 +61,21 @@
                 fvScalarMatrix CiEqn
                 (
                     fvm::ddt(Ci)
-                  + fvm::div(phi, Ci) 
-                  - fvm::laplacian(Deff[i],Ci, "laplacian(D,Ci)")
-                  + fvm::div(zmuFEf,Ci, "div(zmuFEf,Ci)")
+                  + fvm::div(phi, Ci, "div(phi,C)") 
+                  - fvm::Sp(fvc::div(phi), Ci)
+                  - fvm::laplacian(Deff[i], Ci, "laplacian(D,C)")
+                  //+ fvm::div(zmuFEf,Ci, "div(zmuFEf,C)")
+                  - fvc::laplacian(z[i]*mu[i]*F*Ci, phiEl, 
+                                   "laplacian(zmuFC,phiE)")
                     ==
                     fvOptions(Ci)
                 );
                 CiEqn.relax();
                 fvOptions.constrain(CiEqn);
-                CiEqn.solve(mesh.solver("Ci"));
+                CiEqn.solve(mesh.solver("C"));
             }
             else
             {
-                // Set surface normal gradient for boundary field
                 surfaceScalarField snGrad = 
                     (
                         phi*fvc::interpolate(Ci)
@@ -81,7 +83,8 @@
                         -(mesh.Sf() 
                          & fvc::interpolate(t[i]/(z[i]*F), "interpolate(t)")
                              *fvc::interpolate(il))
-                    )/(mesh.magSf()*fvc::interpolate(Deff[i], "interpolate(D)"));
+                    )/(mesh.magSf()*fvc::interpolate(Deff[i], 
+                                                     "interpolate(D)"));
                 
                 setSnGrad<calculatedGradientFvPatchScalarField>
                 (
@@ -93,21 +96,21 @@
                 fvScalarMatrix CiEqn
                 (
                     fvm::ddt(Ci)
-                  + fvm::div(phi, Ci) 
-                  - fvm::laplacian(Deff[i],Ci, "laplacian(D,Ci)")
+                  + fvm::div(phi, Ci, "div(phi,C)") 
+                  - fvm::Sp(fvc::div(phi), Ci)
+                  - fvm::laplacian(Deff[i],Ci, "laplacian(D,C)")
                     ==
                     fvc::div(t[i]/(z[i]*F)*il)
                   + fvOptions(Ci)
                 );
                 CiEqn.relax();
                 fvOptions.constrain(CiEqn);
-                CiEqn.solve(mesh.solver("Ci"));
+                CiEqn.solve(mesh.solver("C"));
             }
-
-
             Ci.correctBoundaryConditions();
             fvOptions.correct(Ci);
             Ci.max(SMALL);
+            Ci.relax();
 
             zC += z[i]*Ci;
             
@@ -141,7 +144,7 @@
         Ci = -zC/z[balanceIndex];
         Ci.correctBoundaryConditions();
         fvOptions.correct(Ci);
-        Ci.max(0.0);
+        Ci.max(SMALL);
         // Calculate species mass fraction
         Y[balanceIndex] = Ci*M[balanceIndex]/rho;
         Yt += Y[balanceIndex];

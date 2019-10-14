@@ -90,6 +90,7 @@ updateCoefficients()
 {     
     diffModel_->update();
     kappaModel_->update();
+    transNumberModel_->update();
 } 
 
 

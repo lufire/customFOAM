@@ -206,9 +206,11 @@ volScalarField div_il
 //    dimensionedScalar("iTrans", dimCurrent/dimVolume, 0.0)
 //);
 volScalarField& phiEl = electrolyte.phiE();
+//volVectorField gradPhiE = fvc::grad(phiEl);
 
 volVectorField& id = electrolyte.iD();
 volVectorField& il = electrolyte.i();
+
 
 volVectorField E
 (
@@ -278,14 +280,40 @@ forAll(Y, speciesI)
     );
 }
 
-label nChargedSpecies = 0;
-forAll(Y, speciesI)
-{
-    if (z[speciesI] != 0)
-    {
-        nChargedSpecies++;
-    }
-}
+volScalarField Dm 
+(
+    IOobject
+    (
+        "Dm",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    F*z[0]*Deff[0]
+);
+
+volScalarField Di
+(
+    IOobject
+    (
+        "Di",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    Deff[0]
+);
+
+//label nChargedSpecies = 0;
+//forAll(Y, speciesI)
+//{
+//    if (z[speciesI] != 0)
+//    {
+//        nChargedSpecies++;
+//    }
+//}
 
 volScalarField rhoE
 (
@@ -315,16 +343,16 @@ volScalarField zC
     dimensionedScalar("zC", dimMoles/dimVol, 0.0)
 );
 
-// Relative permittivity [F/m]
-const dimensionedScalar& epsilonR = electrolyte.epsilon();
-
-// Vacuum permittivity [C]
-const dimensionedScalar& epsilon0 = constant::electromagnetic::epsilon0;
+//// Relative permittivity [F/m]
+//const dimensionedScalar& epsilonR = electrolyte.epsilon();
+//
+//// Vacuum permittivity [C]
+//const dimensionedScalar& epsilon0 = constant::electromagnetic::epsilon0;
 
 scalar iAvgTime = 0.0;
 scalar phiEsAvgTime = 0.0;
 label timeStepCounter = 0;
-label startCounter = 200;
+label startCounter = 50;
 
 const IOdictionary& electrochemDict = electrochemistry.dict();
 const word transportSolver = electrochemDict.lookup("transportSolver");

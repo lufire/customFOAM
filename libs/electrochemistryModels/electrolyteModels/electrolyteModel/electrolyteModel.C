@@ -80,7 +80,14 @@ electrolyteModel::electrolyteModel
     balanceSpecies_(dict.lookup("balanceSpecies")),
     inertSpecies_(dict.lookup("inertSpecies")),
     Cstd_(dict.lookup("standardConcentration")),
-    epsilon_(dict.lookup("relativePermittivity")),
+    epsilon_
+    (
+        dict.lookupOrDefault
+        (
+            "relativePermittivity", 
+            dimensionedScalar("relativePermittivity", dimless, 0.0)
+        )
+    ),
     x_(species_.size()),
     N_(species_.size()),
     S_(species_.size()),

@@ -252,12 +252,15 @@ void polynomialDiff::update()
         }
         forAll(D_[specieI].boundaryField(), patchI)
         {
+            const fvPatch& patch = D_[specieI].boundaryField()[patchI].patch();
+            const labelUList& faceCells = patch.faceCells();
             forAll(D_[specieI].boundaryField()[patchI], faceI)
             {
                 y = C_[refSpecieIndex_[specieI]].boundaryField()[patchI][faceI]
                     /Cstd_.value();
-                D_[specieI].boundaryField()[patchI][faceI] = 
-                    DPoly_[specieI].value(y);
+                scalar Dvalue = DPoly_[specieI].value(y);
+                D_[specieI].boundaryField()[patchI][faceI] = Dvalue;
+                D_[specieI][faceCells[faceI]] = Dvalue;
             }
         }
     }

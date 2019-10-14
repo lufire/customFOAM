@@ -329,7 +329,7 @@ void Foam::speciesFluxConcentrationFvPatchScalarField::updateCoeffs()
         Info << "Patch electric potential: " << phiEp[0] << endl;
         Info << "Patch internal electric potential: " << phiEpI[0] << endl;
         Info << "Patch species flux: " << speciesFluxNormal[0] << endl;
-        Info << "Patch normal velocity: " << UNormal[3] << endl;
+        //Info << "Patch normal velocity: " << UNormal[3] << endl;
     }
     else
     {

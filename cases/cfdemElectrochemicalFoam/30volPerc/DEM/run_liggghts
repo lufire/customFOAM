@@ -1,0 +1,4 @@
+#!/bin/bash
+
+mpirun -np 4 liggghts <in.liggghts_init_dem
+#mpirun -np 4 $CFDEM_LIGGGHTS_SRC_DIR/$CFDEM_LIGGGHTS_LIB_NAME < in.liggghts_init_dem 

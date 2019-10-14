@@ -1,161 +1,156 @@
 {
-    mstm().updateCoefficients();
-   
-    //Update effective diffusion coefficients 
-    forAll(D, speciesI)
-    {
-        DEff[speciesI] = D[speciesI]*pow(voidfraction,1.5);
-        mu[speciesI] = DEff[speciesI]*pow(voidfraction,1.5);
-    }
     //reaction->correct();
     //dQ = reaction->dQ();
+    label balanceIndex = -1;
     label inertIndex = -1;
     volScalarField Yt(0.0*Y[0]);
     zC *= 0.0;
-    il *= 0.0;
-    
-    label chargedSpeciesCount = 0;
+
+    //Update effective transport properties 
+    forAll(D, i)
+    {
+        //Deff[i] = D[i]*pow(voidfraction,1.5);
+        //tEff[i] = t[i]*pow(voidfraction,1.5);
+        mu[i] = D[i]/(R*T);
+    }
+    //label chargedSpeciesCount = 0;
 
     volScalarField iSource = electrodes[0].stoichCoeff(0)
         /(electrodes[0].electronNumber()*F)*electrodes[0].iTrans();
 
-    forAll(C, speciesI)
+    forAll(C, i)
     {
 
-        volScalarField& Ci = C[speciesI];
-        volVectorField& Ni = N[speciesI];
-        //volScalarField& Yi = Y[speciesI];       
-        if (z[speciesI] != 0)
+        if (Y[i].name() == electrolyte.inertSpecies())
         {
-            chargedSpeciesCount++;
+            inertIndex = i;
         }
-//        if (Y[speciesI].name() != inertSpecie)
-        if (Y[speciesI].name() != inertSpecie
-            && chargedSpeciesCount < nChargedSpecies)
+        else if (Y[i].name() == electrolyte.balanceSpecies())
         {
+            balanceIndex = i;
+        }
+        else
+        {
+            volScalarField& Ci = C[i];
+            volVectorField& Ni = N[i];
+
+            volScalarField Di = D[i]*porosityFactor;
             
-            surfaceScalarField zmuFEf 
-            (
-                "zmuFEf", 
-                (
-                    (fvc::interpolate(z[speciesI]*mu[speciesI]*F*E) 
-                     & mesh.Sf())
-                )//*fvc::interpolate(z(speciesI)*mu(spec*Di/(T*kB))
-            );
-            
-            iSource = electrodes[0].stoichCoeff(speciesI)
+            // Sum up source terms due to electrochemical reactions
+            iSource = electrodes[0].stoichCoeff(i)
                 /(electrodes[0].electronNumber()*F)*electrodes[0].iTrans();
-            for(label i=1; i<electrodes.size(); ++i)
+            for(label j=1; j<electrodes.size(); ++j)
             {
-                iSource += electrodes[i].stoichCoeff(speciesI)
-                    /(electrodes[i].electronNumber()*F)*electrodes[i].iTrans();
+                iSource += electrodes[j].stoichCoeff(i)
+                    /(electrodes[j].electronNumber()*F)*electrodes[j].iTrans();
             }
-            //Info << " Name of Species: " << Ci.name() << endl;
-            //Info << " iSource[0]: " << iSource[0] << endl;
-            
-            fvScalarMatrix CiEqn
-            (
-                fvm::ddt(voidfraction,Ci) - fvm::Sp(fvc::ddt(voidfraction),Ci)
-              + fvm::div(phi, Ci) - fvm::Sp(fvc::div(phi), Ci)
-              //+ mvConvection->fvmDiv(phi, Ci) 
-              //- fvm::Sp(fvc::div(phi), Ci)
-              - fvm::laplacian
+
+            if (transportSolver == "dilute")
+            {
+                surfaceScalarField zmuFEf 
                 (
-                    DEff[speciesI],Ci, "laplacian(D,Ci)"
-                )
-              + fvm::div(zmuFEf,Ci, "div(zmuFEf,Ci)")
-                ==
-              - iSource
-              + fvOptions(Ci)
-              //  gamma/M[speciesI]
-              //  *mstm().RR(Y[speciesI].name(), chemistry, speciesI)
-            );
+                    "zmuFEf", 
+                    (
+                        (fvc::interpolate(porosityFactor*z[i]*mu[i]*F*E) 
+                         & mesh.Sf())
+                    )
+                );
+                surfaceScalarField snGrad = 
+                    (
+                        phi*fvc::interpolate(voidfraction*Ci)
+                        -(mesh.Sf() & fvc::interpolate(Ni))
+                        +(zmuFEf * fvc::interpolate(Ci))
+                    )/(mesh.magSf()*fvc::interpolate(Di));
+                fvScalarMatrix CiEqn
+                (
+                    fvm::ddt(voidfraction,Ci) - fvm::Sp(fvc::ddt(voidfraction),Ci)
+                  + fvm::div(phi, Ci) - fvm::Sp(fvc::div(phi), Ci)
+                  - fvm::laplacian(Di, Ci, "laplacian(D,C)")
+                  //+ fvm::div(zmuFEf,Ci, "div(zmuFEf,C)")
+                  - fvc::laplacian(porosityFactor*z[i]*mu[i]*F*Ci, phiEl, 
+                                   "laplacian(zmuFC,phiE)")
+                    ==
+                  - iSource
+                  + fvOptions(Ci)
+                  //  gamma/M[i]
+                  //  *mstm().RR(Y[i].name(), chemistry, i)
+                );
+                CiEqn.relax();
+                fvOptions.constrain(CiEqn);
+                CiEqn.solve(mesh.solver("C"));
+            }
+            else
+            {
+                volScalarField ti = porosityFactor*t[i];
+                surfaceScalarField snGrad = 
+                    (
+                        phi*fvc::interpolate(voidfraction*Ci)
+                        -(mesh.Sf() & fvc::interpolate(Ni))
+                        -(mesh.Sf() & fvc::interpolate(ti*il/(z[i]*F)))
+                    )/(mesh.magSf()*fvc::interpolate(Di));
+                
+                setSnGrad<calculatedGradientFvPatchScalarField>
+                (
+                    Ci.boundaryField(),
+                    snGrad.boundaryField()
+                );
+                
+                fvScalarMatrix CiEqn
+                (
+                    fvm::ddt(voidfraction,Ci) - fvm::Sp(fvc::ddt(voidfraction),Ci)
+                  + fvm::div(phi, Ci) - fvm::Sp(fvc::div(phi), Ci)
+                  - fvm::laplacian(Di, Ci, "laplacian(D,C)")
+                    ==
+                  - fvc::div(ti/(z[i]*F)*il)
+                  - iSource
+                  + fvOptions(Ci)
+                  //  gamma/M[i]
+                  //  *mstm().RR(Y[i].name(), chemistry, i)
+                );
 
-            CiEqn.relax();
-
-            fvOptions.constrain(CiEqn);
-
-            CiEqn.solve(mesh.solver("Ci"));
-
-            fvOptions.correct(Ci);
-            
-            Ci.max(0.0);
-
-            Ni = -DEff[speciesI]*fvc::grad(Ci) + z[speciesI]*mu[speciesI]*F*E*Ci + U*Ci;
-            Ni.correctBoundaryConditions();
-
-            Ci.correctBoundaryConditions();
-
-            zC += z[speciesI]*Ci;
-            //forAll(zC.boundaryField(), patchI)
-            //{
-            //    forAll(zC.boundaryField()[patchI], faceI)
-            //    {
-            //        zC.boundaryField()[patchI][faceI] +=  Ci.boundaryField()[patchI][faceI]*z[speciesI];
-            //        if (zC.boundaryField()[patchI].patch().name()== "currentCollector")
-            //        {
-            //            Info << " Name of Species: " << Ci.name() << endl;
-            //            Info << " Ci = " << Ci.boundaryField()[patchI][faceI] << "; zC = " << zC.boundaryField()[patchI][faceI] << endl;
-            //        }
-            //        if (zC.boundaryField()[patchI].patch().name()== "separator")
-            //        {
-            //            Info << " Name of Species: " << Ci.name() << endl;
-            //            Info << " Ci = " << Ci.boundaryField()[patchI][faceI] << "; zC = " << zC.boundaryField()[patchI][faceI] << endl;
-            //        }
-            //    }
-            //}
-            il += F*z[speciesI]*Ni;
-            
-            // Calculate species mass fraction
-            Y[speciesI] = Ci*M[speciesI]/rho;
-            Yt += Y[speciesI];
-        }
-        else if (Y[speciesI].name() != inertSpecie
-            && z[speciesI] != 0
-            && chargedSpeciesCount == nChargedSpecies)
-        {
-            Ci = -zC/z[speciesI];
-            //forAll(Ci.boundaryField(), patchI)
-            //{
-            //    forAll(Ci.boundaryField()[patchI], faceI)
-            //    {
-            //        //Ci.boundaryField()[patchI][faceI] =  -zC.boundaryField()[patchI][faceI]/z[speciesI];
-            //        if (zC.boundaryField()[patchI].patch().name()== "currentCollector")
-            //        {
-            //            Info << " Name of Species: " << Ci.name() << endl;
-            //            Info << " Ci = " << Ci.boundaryField()[patchI][faceI] << "; zC = " << zC.boundaryField()[patchI][faceI] << endl;
-            //        }
-            //        if (zC.boundaryField()[patchI].patch().name()== "separator")
-            //        {
-            //            Info << " Name of Species: " << Ci.name() << endl;
-            //            Info << " Ci = " << Ci.boundaryField()[patchI][faceI] << "; zC = " << zC.boundaryField()[patchI][faceI] << endl;
-            //        }
-            //    }
-            //}
-            Ci.correctBoundaryConditions();
+                CiEqn.relax();
+                fvOptions.constrain(CiEqn);
+                CiEqn.solve(mesh.solver("C"));
+            }
             fvOptions.correct(Ci);
             Ci.max(0.0);
 
-            Ni = -DEff[speciesI]*fvc::grad(Ci) + z[speciesI]*mu[speciesI]*F*E*Ci;
-            // Calculate species flux density
-            //N[speciesI] = z[speciesI]*mu[speciesI]*F*Ci*E-D[speciesI]*fvc::grad(Ci);
+            //Ni = -Deff[i]*fvc::grad(Ci) + z[i]*mu[i]*F*E*Ci + U*Ci;
+            //Ni.correctBoundaryConditions();
 
-            il += F*z[speciesI]*Ni;
+            Ci.correctBoundaryConditions();
+
+            zC += z[i]*Ci;
+
+            //il += F*z[i]*Ni;
+            
             // Calculate species mass fraction
-            Y[speciesI] = Ci*M[speciesI]/rho;
-            Yt += Y[speciesI];
+            Y[i] = Ci*M[i]/rho;
+            Yt += Y[i];
         }
-        else if (Y[speciesI].name() == inertSpecie)
-        {
-            inertIndex = speciesI;
-        }
+    }
+
+    forAll(electrodes, electrodeI)
+    {
+        electrodes[electrodeI].correctSpecies(C);
+    } 
+
+    { 
+        volScalarField& Ci = C[balanceIndex];
+        Ci = -zC/z[balanceIndex];
+        Ci.correctBoundaryConditions();
+        fvOptions.correct(Ci);
+        Ci.max(SMALL);
+        // Calculate species mass fraction
+        Y[balanceIndex] = Ci*M[balanceIndex]/rho;
+        Yt += Y[balanceIndex];
     }
 
     Y[inertIndex] = scalar(1) - Yt;
     C[inertIndex] = Y[inertIndex]*rho/M[inertIndex];
     C[inertIndex].max(0.0);
     Y[inertIndex].max(0.0);
-    il.correctBoundaryConditions();
+    //il.correctBoundaryConditions();
 
-    mstm().updateMolarFractions();
+    //mstm().updateMolarFractions();
 }

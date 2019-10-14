@@ -1,106 +1,137 @@
-//Calculate electrode charge transfer 
-electrochemistry.correct();
+if(electrochemistry.active())
+{
+    // Explicitly calculate electric current density due to diffusion flux
+    id *= 0.0;
+    volScalarField divId = fvc::div(id)*0.0;
+    surfaceVectorField nHat = mesh.Sf()/mesh.magSf();
+    dimensionedScalar smallC("smallC", dimMoles/dimVol, SMALL);
+    forAll(C, i)
+    {
+        if (z[i] != 0)
+        {
+            if (transportSolver == "dilute")
+            {
+                Dm = F*z[i]*D[i]*porosityFactor;
+            }
+            else
+            {
+                Dm = -kappa*porosityFactor*t[i]/(F*z[i])*R*T/(C[i]+smallC);
+            }
+            // Set internal field next to boundary equal to boundary values
+            // (leads to better results for weighted gradient calculation)
+            forAll(Dm.boundaryField(), patchI)
+            {
+                fvPatchScalarField& Dmp = Dm.boundaryField()[patchI];
+                const fvPatch& patch = Dm.boundaryField()[patchI].patch();
+                const labelUList& faceCells = patch.faceCells();
+                forAll(Dmp, faceI)
+                {
+                    Dm[faceCells[faceI]] = Dmp[faceI];
+                }
+            }
 
-is *= 0.0;
+            id -= Dm*fvc::grad(C[i], "grad(C)");
+            divId -= fvc::laplacian(Dm, C[i], "laplacian(Dm,C)");
+        }
+    }
+
+    //Calculate electrode charge transfer 
+    electrochemistry.correct();
+
+    volScalarField divIs = divId*0.0;
+    //is *= 0.0;
+    forAll(electrodes, electrodeI)
+    {
+        //is += electrodes[electrodeI].is();
+        divIs += fvc::div(electrodes[electrodeI].is());
+    }
+
+
+    //iTrans *= 0.0;
+    //forAll(electrodes, electrodeI)
+    //{
+    //    iTrans += electrodes[electrodeI].iTrans();
+    //} 
+    // Solve for liquid electrostatic potential
+    kappaEff = kappa*porosityFactor;
+    surfaceScalarField snGrad = 
+        (
+            -(fvc::interpolate(il) & mesh.Sf())
+            +(fvc::interpolate(id) & mesh.Sf())
+        )/(mesh.magSf()*fvc::interpolate(kappaEff));
+
+    setSnGrad<calculatedGradientFvPatchScalarField>
+    (
+        phiEl.boundaryField(),
+        snGrad.boundaryField()
+    );
+
+    Info << "Solve for electric potential in liquid electrolyte" << endl; 
+    fvScalarMatrix phiElEqn
+    (
+        fvm::laplacian(kappaEff, phiEl, "laplacian(kappa,phiE)")
+        == 
+        //iTrans
+        divId
+      + divIs
+      //  fvc::div(id) 
+      //+ fvc::div(is)
+    );
+    phiElEqn.relax();
+    phiElEqn.solve();
+    phiEl.correctBoundaryConditions();
+
+    il = kappaEff*E + id; 
+    il.correctBoundaryConditions();
+
+
+    forAll(electrodes, electrodeI)
+    {
+        electrodes[electrodeI].correctElectricity();
+    } 
+
+    // Calculate electric field
+    E = -fvc::grad(phiEl);
+}
+
+// Explicitly calculate species fluxes
+forAll(C, i)
+{
+    if (Y[i].name() != inertSpecie
+        && z[i] != 0)
+    {
+        Di = D[i]*porosityFactor;
+        if (transportSolver == "dilute")
+        {
+            N[i] = 
+               U*C[i]*voidfraction
+               -Di*fvc::grad(C[i], "grad(Ci)");
+               +z[i]*mu[i]*porosityFactor*F*E*C[i];
+        }
+        else
+        {
+            N[i] = 
+               U*C[i]*voidfraction 
+               -Di*fvc::grad(C[i], "grad(Ci)");
+               -t[i]*porosityFactor/(z[i]*F)*il;
+        }
+        N[i].correctBoundaryConditions();
+    }
+}
 forAll(electrodes, electrodeI)
 {
-    is += electrodes[electrodeI].is();
-}
-//Update concentration, diffusion coefficients and mobility
-//forAll(Y, speciesI)
-//{
-//    //C[speciesI] = Y[speciesI]*rho/M[speciesI];
-//    if (Y[speciesI].name() != inertSpecie)
-//    {    
-//        mu[speciesI] = DEff[speciesI]/(R*T);
-//    }
-//}
-
-// Calculate conductivity field
-kappa *= 0;         
-forAll(C, speciesI)
-{
-    //C[speciesI].correctBoundaryConditions();
-    if (Y[speciesI].name() != inertSpecie)
-    {
-        kappa += F*F*z[speciesI]*z[speciesI]*mu[speciesI]*C[speciesI];
-    }
-}
-//surfaceScalarField kappaf("kappaf",fvc::interpolate(kappa));
-//dimensionedScalar kappaInit
-//(
-//    "kappa", 
-//    sqr(dimCurrent)*pow3(dimTime)/(dimVol*dimMass),
-//    1.0e4 
-//);
-//kappa += kappaInit*Foam::exp(-100.0*runTime.timeOutputValue());
-
-
-// Explicitly calculate electric current density due to diffusion flux
-id *= 0.0;
-forAll(Y, speciesI)
-{
-    if (Y[speciesI].name() != inertSpecie)
-    {
-        id -= F*z[speciesI]*DEff[speciesI]*fvc::grad(C[speciesI]);
-    }
-}
-// Correct diffusion current density due to voidfraction (Bruggeman)
-//id *= pow(voidfraction,1.5);
-
-//surfaceScalarField idf(fvc::interpolate(id)&mesh.Sf());
-rhoE *= 0.0;
-forAll(Y, speciesI)
-{
-    if (Y[speciesI].name() != inertSpecie)
-    {
-        rhoE += F*z[speciesI]*C[speciesI];
-    }
-}
-//rhoE *= 0.0;
-
-iTrans *= 0.0;
-forAll(electrodes, electrodeI)
-{
-    iTrans += electrodes[electrodeI].iTrans();
+    electrodes[electrodeI].correctSpeciesFlux();
 } 
-// Solve for liquid electrostatic potential
-Info << "Solve for electric potential in liquid electrolyte" << endl; 
-fvScalarMatrix phiElEqn
-(
-    fvm::laplacian(kappa, phiEl, "laplacian(kappa,phiEl)")
-  //+ fvc::div(id)
-  //+ fvc::div(is)
-    == 
-    //iTrans
-    fvc::div(id) 
-  + fvc::div(is)
-);
 
-
-// Solve Poisson equation
-//dimensionedScalar epsilon = epsilon0*epsilonR;
-//fvScalarMatrix phiElEqn
-//(
-//    fvm::laplacian(epsilon, phiEl, "laplacian(epsilon, phiEl)") + rhoE
-//);
-
-phiElEqn.solve();
-phiEl.correctBoundaryConditions();
-
-//phiEl = phiEl*(1.0-0.7)+phiEl.oldTime()*(0.7);
-//phiEl *= 0;
-
-// Calculate electric field
-E = -fvc::grad(phiEl);
-
-// Calculate liquid current density
-//il = id + kappa*E;
-//im = kappa*E;
-//il.correctBoundaryConditions();
-
-
-
-//div_il = fvc::div(il);
-//div_is = fvc::div(is);
-
+if(electrochemistry.active())
+{
+ 
+    rhoE *= 0.0;
+    forAll(Y, specieI)
+    {
+        if (Y[specieI].name() != inertSpecie)
+        {
+            rhoE += F*z[specieI]*C[specieI];
+        }
+    }
+}

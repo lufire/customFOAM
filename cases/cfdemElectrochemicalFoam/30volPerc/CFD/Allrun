@@ -1,0 +1,24 @@
+#!/bin/sh
+#cd ${0%/*} || exit 1    # run from this directory
+
+# Source tutorial run functions
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+. $WM_PROJECT_DIR/bin/tools/CleanFunctions
+
+cp -R system/pisoFoam/* system/
+
+mkdir 0
+runApplication blockMesh
+runApplication snappyHexMesh -overwrite
+cp -R 0.org/* 0/
+
+cp system/topoSetDict.fixedJump system/topoSetDict
+runApplication topoSet
+runApplication createBaffles -overwrite
+rm -R 0/cellLevel
+rm -R 0/pointLevel
+runApplication decomposePar
+runParallel `getApplication` 4
+runApplication reconstructPar
+
+# ----------------------------------------------------------------- end-of-file

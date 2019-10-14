@@ -51,6 +51,7 @@ Description
 
 // ----------------------------- code addition ----------------------------- //
 #include "calculatedGradientFvPatchScalarField.H"
+#include "linearGradientFvPatchScalarField.H"
 #include "electrochemistryModel.H"
 //#include "conductivityModel.H"
 //#include "diffusivityModel.H"
@@ -94,24 +95,36 @@ int main(int argc, char *argv[])
 
         while (pimple.loop()) 
         {
-            surfaceScalarField phiByRho = phi/fvc::interpolate(rho);
+            //surfaceScalarField phiByRho = phi/fvc::interpolate(rho);
 
-            tmp<fv::convectionScheme<scalar> > mvConvection
-            (
-                fv::convectionScheme<scalar>::New
-                (
-                    mesh,
-                    fields,
-                    phiByRho,
-                    mesh.divScheme("div(phi,Ci_h)")
-                )
-            );
+            //tmp<fv::convectionScheme<scalar> > mvConvection
+            //(
+            //    fv::convectionScheme<scalar>::New
+            //    (
+            //        mesh,
+            //        fields,
+            //        phiByRho,
+            //        mesh.divScheme("div(phi,Ci_h)")
+            //    )
+            //);
 
             #include "chemistry.H"
-            #include "CEqn.H"
-            #include "ElectricEqn.H"
-            //#include "hsEqn.H"
+            label iter = 1;
+            label iterMax = 10; 
+            scalar alpha = 0.0;
+            while(iter <= iterMax)
+            {
+                //if(iter == iterMax)
+                //{
+                //    alpha = 1.0;
+                //}
+                alpha = Foam::pow(scalar(iter)/scalar(iterMax), 2.0);
+                #include "CEqn.H"
+                #include "ElectricEqn.H"
+                iter++;
+            }
             
+            //#include "hsEqn.H"
             #include "UEqn.H"
             while (pimple.correct())
             {
@@ -127,23 +140,26 @@ int main(int argc, char *argv[])
         }
 
         //scalar phiEsAvg = electrodes[0].potential();
+        scalar phiEsAvg = 0.0;
         scalar iAvg = 0.0;
+        
         {
             vectorField ilp = mesh.boundary()["currentCollector"].patchField<volVectorField, vector>(il);
-            //scalarField Ap = mesh.boundary()["currentCollector"].magSf();
             tmp<vectorField> tn = mesh.boundary()["currentCollector"].nf();
-            vectorField n = tn();
+            const vectorField& n = tn();
             scalarField iNormal = ilp&n;
+            const scalarField& magSf = mesh.boundary()["currentCollector"].magSf();
             label faceCount = 0;
-
+            scalar patchArea = 0.0;
             forAll(iNormal, faceI)
             {
-                iAvg += iNormal[faceI];
+                patchArea += magSf[faceI];
+                iAvg += iNormal[faceI]*magSf[faceI];
 
             }
-            if(iNormal.size() > 0) 
+            if(patchArea > 0.0) 
             {
-                iAvg /= iNormal.size();
+                iAvg /= patchArea;
             }
             Info << "Average cell current density = " << iAvg << endl; 
             //Info << "Average electrode potential = " << phiEsAvg << endl; 
@@ -155,20 +171,7 @@ int main(int argc, char *argv[])
             ++timeStepCounter;
         }
         runTime.write();
-        if (runTime.write())
-        {
-            //thermo.T().write();
-            //chemistry.dQ()().write();
-            //forAll(composition.C(), i)
-            //{
-            //    composition.C()[i].write();
-            //}
-            //iTrans.write();
-            //is.write();
-        }
         
-        // Calculate average current density at separator
-
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"
             << nl << endl;
@@ -179,13 +182,13 @@ int main(int argc, char *argv[])
     OFstream os(outputFile);
     os << "Average cell current density: " 
         << iAvgTime/scalar(timeStepCounter-startCounter) << endl;
-    //os << "Average electrode potential: " 
-    //    << phiEsAvgTime/scalar(timeStepCounter-startCounter) << endl;
+    os << "Average electrode potential: " 
+        << phiEsAvgTime/scalar(timeStepCounter-startCounter) << endl;
 
     Info << "Average cell current density: " 
         << iAvgTime/scalar(timeStepCounter-startCounter) << endl;
-    //Info << "Average electrode potential: " 
-    //    << phiEsAvgTime/scalar(timeStepCounter-startCounter) << endl;
+    Info << "Average electrode potential: " 
+        << phiEsAvgTime/scalar(timeStepCounter-startCounter) << endl;
 
     Info<< "End\n" << endl;
 

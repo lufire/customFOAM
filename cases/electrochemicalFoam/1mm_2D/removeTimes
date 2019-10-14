@@ -1,0 +1,10 @@
+#!/bin/sh
+#cd ${0%/*} || exit 1    # run from this directory
+
+integer = 0
+for folder in 0.*
+do
+	if [$delete = yes]
+	then rm -f $folder; integer = integer + 1
+	else delete = yes
+

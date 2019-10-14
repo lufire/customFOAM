@@ -1,0 +1,77 @@
+#echo both
+
+atom_style	granular
+atom_modify	map array
+communicate	single vel yes
+
+#--modified C.K.
+#boundary	f f p
+boundary        f p f
+newton		off
+
+units	    si	
+processors	1 2 2
+dimension	3
+
+read_data 	../DEM/post/data.liggghts_init_dem
+
+region		reg block -0.001 0.001 0.0 0.003 -0.001 0.001 units box
+#create_box	1 reg
+
+neighbor	0.0001 bin
+neigh_modify	delay 0 #binsize 0.01
+#neigh_modify
+
+
+#Material properties required for new pair styles
+
+fix 		m1 all property/global youngsModulus peratomtype 1e6
+fix 		m2 all property/global poissonsRatio peratomtype 0.45
+fix 		m3 all property/global coefficientRestitution peratomtypepair 1 0.5
+fix 		m4 all property/global coefficientFriction peratomtypepair 1 0.5
+
+#pair style
+pair_style gran model hertz tangential history #Hertzian without cohesion
+pair_coeff	* *
+
+#timestep, gravity
+timestep    1.0e-06	
+
+fix		gravi all gravity 0.0 vector 0.0 -1.0 0.0
+#fix		gravi all gravity 981 vector 0.0 0.0 -1.0
+
+#walls
+fix cad all mesh/surface file ../DEM/surface.stl type 1
+fix meshwalls all wall/gran model hertz tangential history mesh n_meshes 1 meshes cad
+#fix   	xwalls1 all wall/gran model hertz tangential history primitive type 1 xplane -0.05
+fix     xwalls2 all wall/gran model hertz tangential history primitive type 1 xplane 0.001
+fix	zwalls1 all wall/gran model hertz tangential history primitive type 1 zplane -0.001
+fix	zwalls2 all wall/gran model hertz tangential history primitive type 1 zplane 0.001
+
+#cfd coupling
+fix		cfd all couple/cfd couple_every 10 mpi
+fix         cfd2 all couple/cfd/force/implicit
+#fix		cfd2 all couple/cfd/force
+
+#region and insertion
+group       nve_group region reg
+
+#apply nve integration to all particles that are inserted as single particles
+fix		integr all nve/sphere #wenn das ausgeblendet, dann kein vel update
+#fix		2d all enforce2d
+
+#screen output
+
+compute		1 all erotate/sphere
+compute		2 all pair/gran/local pos id force history contactArea
+compute		3 all wall/gran/local pos id force history contactArea
+thermo_style	custom step atoms ke c_1 vol
+thermo		10000
+thermo_modify	lost ignore norm no
+compute_modify	thermo_temp dynamic yes
+
+#insert the first particles so that dump is not empty
+run		1
+dump		dmp all custom 10000 ../DEM/post/dump.liggghts_init id type type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius
+dump		localpairdump all local 10000 ../DEM/post/dump.pairgranlocal_init index c_2[7] c_2[8] c_2[1] c_2[2] c_2[3] c_2[4] c_2[5] c_2[6] c_2[9] c_2[10] c_2[11] c_2[12] c_2[13] c_2[14] c_2[15] c_2[16]  
+dump		localwalldump all local 10000 ../DEM/post/dump.wallgranlocal_init index c_3[1] c_3[2] c_3[3] c_3[4] c_3[5] c_3[6] c_3[7] c_3[8] c_3[9] c_3[10] c_3[11] c_3[12] c_3[13] c_3[14] c_3[15] c_3[16]

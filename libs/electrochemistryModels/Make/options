@@ -11,9 +11,8 @@ EXE_INC = \
     -I$(CFDEM_SRC_DIR)/lagrangian/cfdemParticle/lnInclude \
     -I$(LIB_SRC)/turbulenceModels/incompressible/turbulenceModel \
     -I$(LIB_SRC)/transportModels \
-    -I$(FOAM_RUN)/../myLibs/extendedReactionThermo/lnInclude \
-    -I$(FOAM_RUN)/../myLibs/extendedChemistryModels/lnInclude \
-    -DFULLDEBUG -g -O0
+    -I../extendedReactionThermo/lnInclude \
+    -I../extendedChemistryModels/lnInclude
 
 LIB_LIBS = \
     -lfiniteVolume \

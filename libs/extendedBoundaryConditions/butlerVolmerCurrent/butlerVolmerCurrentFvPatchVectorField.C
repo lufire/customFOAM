@@ -49,9 +49,10 @@ butlerVolmerCurrentFvPatchVectorField
     gammaOxidant_(1.0),
     gammaReductant_(1.0),
     iEx_(0.0),
-    equilibriumPotential_(0.0),
+    eqPotential_(0.0),
     alphaA_(1.0),
-    alphaC_(1.0)
+    alphaC_(1.0),
+    nElectrons_(1)
 {}
 
 
@@ -75,10 +76,11 @@ butlerVolmerCurrentFvPatchVectorField
     gammaOxidant_(ptf.gammaOxidant_),
     gammaReductant_(ptf.gammaReductant_),
     iEx_(ptf.iEx_),
-    equilibriumPotential_(ptf.equilibriumPotential_),
+    eqPotential_(ptf.eqPotential_),
     electrodePotential_(ptf.electrodePotential_),
     alphaA_(ptf.alphaA_),
-    alphaC_(ptf.alphaC_)
+    alphaC_(ptf.alphaC_),
+    nElectrons_(ptf.nElectrons_)
 {}
 
 
@@ -101,10 +103,11 @@ butlerVolmerCurrentFvPatchVectorField
     gammaOxidant_(readScalar(dict.lookup("gammaOxidant"))),
     gammaReductant_(readScalar(dict.lookup("gammaReductant"))),
     iEx_(readScalar(dict.lookup("exchangeCurrentDensity"))),
-    equilibriumPotential_(readScalar(dict.lookup("equilibriumPotential"))),
+    eqPotential_(readScalar(dict.lookup("equilibriumPotential"))),
     electrodePotential_(readScalar(dict.lookup("electrodePotential"))),
     alphaA_(readScalar(dict.lookup("alphaA"))),
-    alphaC_(readScalar(dict.lookup("alphaC")))
+    alphaC_(readScalar(dict.lookup("alphaC"))),
+    nElectrons_(readLabel(dict.lookup("electrons")))
 {
     fvPatchVectorField::operator=(vectorField("value", dict, p.size()));
 }
@@ -127,10 +130,11 @@ butlerVolmerCurrentFvPatchVectorField
     gammaOxidant_(bvcpvf.gammaOxidant_),
     gammaReductant_(bvcpvf.gammaReductant_),
     iEx_(bvcpvf.iEx_),
-    equilibriumPotential_(bvcpvf.equilibriumPotential_),
+    eqPotential_(bvcpvf.eqPotential_),
     electrodePotential_(bvcpvf.electrodePotential_),
     alphaA_(bvcpvf.alphaA_),
-    alphaC_(bvcpvf.alphaC_)
+    alphaC_(bvcpvf.alphaC_),
+    nElectrons_(bvcpvf.nElectrons_)
 {}
 
 
@@ -152,10 +156,11 @@ butlerVolmerCurrentFvPatchVectorField
     gammaOxidant_(bvcpvf.gammaOxidant_),
     gammaReductant_(bvcpvf.gammaReductant_),
     iEx_(bvcpvf.iEx_),
-    equilibriumPotential_(bvcpvf.equilibriumPotential_),
+    eqPotential_(bvcpvf.eqPotential_),
     electrodePotential_(bvcpvf.electrodePotential_),
     alphaA_(bvcpvf.alphaA_),
-    alphaC_(bvcpvf.alphaC_)
+    alphaC_(bvcpvf.alphaC_),
+    nElectrons_(bvcpvf.nElectrons_)
 {}
 
 
@@ -245,42 +250,53 @@ void Foam::butlerVolmerCurrentFvPatchVectorField::updateCoeffs()
            
     vectorField ip(phiEp.size(), vector::zero);
         
+    scalar maxCurrent = 1e4;
     if (phiE.dimensions() == dimMass*dimArea/pow3(dimTime)/dimCurrent)
     {
         forAll(ip, faceI)
         {
-        /*
-            Info << "ip = " << ip[faceI]
-            << ", n = " << n[faceI]
-            << ", T = " << Tp[faceI]            
+            scalar redFactor = 
+                pow(CReductantp[faceI]/CRefReductant_, gammaReductant_);
+            scalar oxFactor = 
+                pow(COxidantp[faceI]/CRefOxidant_,gammaOxidant_);
+            scalar K = R*Tp[faceI]/(nElectrons_*F);
+            scalar i0 = iEx_*pow(redFactor,alphaC_)*pow(oxFactor,alphaA_);
+            scalar overPotential = 
+                electrodePotential_ - phiEp[faceI] - eqPotential_;
+            //if(mag(overPotential) > mag(eqPotential_))
+            //{
+            //    overPotential = Foam::sign(overPotential)*mag(eqPotential_);
+            //}
+            //scalar iT = iEx_
+            //   *(redFactor*Foam::exp(alphaA_/K*overPotential)
+            //     -oxFactor*Foam::exp(-alphaC_/K*overPotential));
+            scalar iT = i0
+               *(exp(alphaA_/K
+                     *(overPotential + K*log(redFactor/oxFactor)))
+                 -exp(-(1-alphaA_)/K
+                      *(overPotential + K*log(redFactor/oxFactor))));
+
+                 //  Foam::exp(alphaA_*F/R/Tp[faceI]
+                 // *(electrodePotential_-phiEp[faceI]-eqPotential_))                  
+                 // -Foam::exp(-alphaC_*F/R/Tp[faceI]
+                 // *(electrodePotential_-phiEp[faceI]-eqPotential_))
+
+
+            //ip[faceI] =  n[faceI]*pow(YReductantp[faceI]/CRefReductant_,gammaReductant_);
+            //iT = (mag(iT)<maxCurrent)?iT:Foam::sign(iT)*maxCurrent;
+            iT = (mag(iT)<maxCurrent)?iT:Foam::sign(iT)*maxCurrent;
+            ip[faceI] = iT*n[faceI]*-1.0;
+
+            Info << "faceI" << faceI
             << ", CReductantp = " << CReductantp[faceI]                       
             << ", COxidantp = " << COxidantp[faceI]
             << ", CRefReductant = " << CRefReductant_
-            << ", CRefOxidant = " << CRefOxidant_ << endl;
-        */
-            ip[faceI] = iEx_*n[faceI]*-1.0
-               *(
-
-                    pow(CReductantp[faceI]/CRefReductant_,gammaReductant_)
-                   *Foam::exp(alphaA_*F/R/Tp[faceI]
-                   *(electrodePotential_-phiEp[faceI]-equilibriumPotential_))
-                   -pow(COxidantp[faceI]/CRefOxidant_,gammaOxidant_)
-                   *Foam::exp(-alphaC_*F/R/Tp[faceI]
-                   *(electrodePotential_-phiEp[faceI]-equilibriumPotential_))
-
-/*
-
-                   Foam::exp(alphaA_*F/R/Tp[faceI]
-                  *(electrodePotential_-phiEp[faceI]-equilibriumPotential_))                  
-                  -Foam::exp(-alphaC_*F/R/Tp[faceI]
-                  *(electrodePotential_-phiEp[faceI]-equilibriumPotential_))
-*/
-
-
-                );
-            //ip[faceI] =  n[faceI]*pow(YReductantp[faceI]/CRefReductant_,gammaReductant_);
-                        
-            Info << "ip = " << ip[faceI] << endl; 
+            << ", CRefOxidant = " << CRefOxidant_
+            << ", phiE = " << phiEp[faceI] 
+            << ", overPotential = " << overPotential 
+            << ", oxFactor = " << oxFactor 
+            << ", redFactor = " << redFactor
+            << "ip = " << ip[faceI] << endl; 
         }
         operator==(ip);
 //             
@@ -330,13 +346,15 @@ void Foam::butlerVolmerCurrentFvPatchVectorField::write(Ostream& os) const
         << token::END_STATEMENT << nl;
     os.writeKeyword("exchangeCurrentDensity") << iEx_ 
         << token::END_STATEMENT << nl;
-    os.writeKeyword("equilibriumPotential") << equilibriumPotential_ 
+    os.writeKeyword("equilibriumPotential") << eqPotential_ 
         << token::END_STATEMENT << nl;
     os.writeKeyword("electrodePotential") << electrodePotential_ 
         << token::END_STATEMENT << nl;
     os.writeKeyword("alphaA") << alphaA_ 
         << token::END_STATEMENT << nl;
     os.writeKeyword("alphaC") << alphaC_ 
+        << token::END_STATEMENT << nl;
+    os.writeKeyword("electrons") << nElectrons_ 
         << token::END_STATEMENT << nl;
     writeEntry("value", os);
 }

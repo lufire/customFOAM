@@ -1,0 +1,112 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.1                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      thermo.constLiquid;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+ZnOH4--
+{
+    specie
+    {
+        nMoles          1;
+        molWeight       133.4194;
+    }
+    equationOfState
+    {
+        rho             1290;
+        pRef		    0;
+    }    
+    thermodynamics
+    {
+	    Cp              4000;
+	    Hf              0;
+    }
+    transport
+    {
+	    mu              3e-3;
+	    Pr              7;
+    }
+}
+
+OH-
+{
+    specie
+    {
+        nMoles          1;
+        molWeight       17.0073;
+    }
+    equationOfState
+    {
+        rho             1290;
+        pRef		    0;
+    }    
+    thermodynamics
+    {
+        Cp              4000;
+        Hf              0;
+    }
+    transport
+    {
+        mu              3e-3;
+        Pr              7;
+    }
+}
+
+K+
+{
+    specie
+    {
+        nMoles          1;
+        molWeight       39.0983;
+    }
+    equationOfState
+    {
+        rho             1290;
+        pRef		    0;
+    }    
+    thermodynamics
+    {
+        Cp              4000;
+        Hf              0;
+    }
+    transport
+    {
+        mu              3e-3;
+        Pr              7;
+    }
+}
+
+H2O 
+{
+    specie
+    {
+        nMoles          1;
+        molWeight       18.0153;
+    }
+    equationOfState
+    {
+        rho             1290;
+        pRef		    0;
+    }    
+    thermodynamics
+    {
+        Cp              4000;
+        Hf              0;
+    }
+    transport
+    {
+        mu              3e-3;
+        Pr              7;
+    }
+}
+

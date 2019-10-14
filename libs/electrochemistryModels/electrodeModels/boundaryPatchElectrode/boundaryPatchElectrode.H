@@ -92,6 +92,9 @@ class boundaryPatchElectrode
         //- Correct the electrode surface area per cell volume
         void correctElectrodeConductivity();
 
+        //- Correct the current density with given electrode potential
+        void correctCurrentDensity();
+
         //- Correct the transfer current density
         void correctTransferCurrentDensity();
 

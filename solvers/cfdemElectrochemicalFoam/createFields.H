@@ -162,9 +162,9 @@ volScalarField K("K", 0.5*magSqr(U));
 
 multivariateSurfaceInterpolationScheme<scalar>::fieldTable fields;
 
-forAll(Y, speciesI)
+forAll(Y, i)
 {
-    fields.add(Y[speciesI]);
+    fields.add(Y[i]);
 }
 fields.add(hs);
 
@@ -245,23 +245,30 @@ const dimensionedScalar& e = constant::electromagnetic::e;
 myCfdemCloud particleCloud(mesh);
         
 // Create electrochemistry model
-electrochemistryModel electrochemistry(thermo, particleCloud);
-PtrList<electrodeModels::electrodeModel>& electrodes(electrochemistry.electrodes());
-volScalarField iTrans
-(
-    IOobject
-    (
+electrochemistryModels::electrochemistryModel electrochemistry(thermo, particleCloud);
+PtrList<electrochemistryModels::electrodeModels::electrodeModel>& 
+    electrodes(electrochemistry.electrodes());
+electrochemistryModels::electrolyteModels::electrolyteModel& 
+    electrolyte(electrochemistry.electrolyte());
 
-        "iTrans",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    mesh,
-    dimensionedScalar("iTrans", dimCurrent/dimVolume, 0.0)
-);
-volScalarField& phiEl = electrochemistry.phiEl();
+//volScalarField iTrans
+//(
+//    IOobject
+//    (
+//        "iTrans",
+//        runTime.timeName(),
+//        mesh,
+//        IOobject::NO_READ,
+//        IOobject::AUTO_WRITE
+//    ),
+//    mesh,
+//    dimensionedScalar("iTrans", dimCurrent/dimVolume, 0.0)
+//);
+//volScalarField& phiEl = electrochemistry.phiEl();
+
+volScalarField& phiEl = electrolyte.phiE();
+volVectorField& id = electrolyte.iD();
+volVectorField& il = electrolyte.i();
 //volScalarField phiEl
 //(
 //    IOobject
@@ -289,81 +296,81 @@ volScalarField& phiEl = electrochemistry.phiEl();
 //);
 
 
-volVectorField il
-(
-    IOobject
-    (
-        "il",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    mesh,
-    dimensionedVector
-    (
-        "il",
-        dimensionSet(0,-2,0,0,0,1,0),
-        vector(0.0, 0.0, 0.0)
-    )
-);
+//volVectorField il
+//(
+//    IOobject
+//    (
+//        "il",
+//        runTime.timeName(),
+//        mesh,
+//        IOobject::NO_READ,
+//        IOobject::AUTO_WRITE
+//    ),
+//    mesh,
+//    dimensionedVector
+//    (
+//        "il",
+//        dimensionSet(0,-2,0,0,0,1,0),
+//        vector(0.0, 0.0, 0.0)
+//    )
+//);
+//
+//volVectorField id
+//(
+//    IOobject
+//    (
+//        "id",
+//        runTime.timeName(),
+//        mesh,
+//        IOobject::NO_READ,
+//        IOobject::AUTO_WRITE
+//    ),
+//    mesh,
+//    dimensionedVector
+//    (
+//        "id",
+//        dimensionSet(0,-2,0,0,0,1,0),
+//        vector(0.0, 0.0, 0.0)
+//    )
+//);
 
-volVectorField id
-(
-    IOobject
-    (
-        "id",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    mesh,
-    dimensionedVector
-    (
-        "id",
-        dimensionSet(0,-2,0,0,0,1,0),
-        vector(0.0, 0.0, 0.0)
-    )
-);
+//volVectorField is
+//(
+//    IOobject
+//    (
+//        "is",
+//        runTime.timeName(),
+//        mesh,
+//        IOobject::NO_READ,
+//        IOobject::AUTO_WRITE
+//    ),
+//    mesh,
+//    dimensionedVector
+//    (
+//        "is",
+//        dimensionSet(0,-2,0,0,0,1,0),
+//        vector(0.0, 0.0, 0.0)
+//    )
+//);
 
-volVectorField is
-(
-    IOobject
-    (
-        "is",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    mesh,
-    dimensionedVector
-    (
-        "is",
-        dimensionSet(0,-2,0,0,0,1,0),
-        vector(0.0, 0.0, 0.0)
-    )
-);
-
-volVectorField im
-(
-    IOobject
-    (
-        "im",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    mesh,
-    dimensionedVector
-    (
-        "im",
-        dimensionSet(0,-2,0,0,0,1,0),
-        vector(0.0, 0.0, 0.0)
-    )
-);
+//volVectorField im
+//(
+//    IOobject
+//    (
+//        "im",
+//        runTime.timeName(),
+//        mesh,
+//        IOobject::NO_READ,
+//        IOobject::AUTO_WRITE
+//    ),
+//    mesh,
+//    dimensionedVector
+//    (
+//        "im",
+//        dimensionSet(0,-2,0,0,0,1,0),
+//        vector(0.0, 0.0, 0.0)
+//    )
+//);
 
 //volScalarField sigma
 //(
@@ -384,24 +391,24 @@ volVectorField im
 //    )
 //);
 
-volScalarField kappa
-(
-    IOobject
-    (
-        "kappa",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    mesh,
-    dimensionedScalar
-    (
-        "kappa", 
-        sqr(dimCurrent)*pow3(dimTime)/(dimVol*dimMass),
-        50.0
-    )
-);
+//volScalarField kappa
+//(
+//    IOobject
+//    (
+//        "kappa",
+//        runTime.timeName(),
+//        mesh,
+//        IOobject::NO_READ,
+//        IOobject::AUTO_WRITE
+//    ),
+//    mesh,
+//    dimensionedScalar
+//    (
+//        "kappa", 
+//        sqr(dimCurrent)*pow3(dimTime)/(dimVol*dimMass),
+//        50.0
+//    )
+//);
 
 
 volVectorField E
@@ -461,100 +468,98 @@ volVectorField E
 //    )
 //);
 // ------------------------------------------------------------------------- //
-autoPtr<liquidMultiSpeciesTransportModel> mstm
-(
-    liquidMultiSpeciesTransportModel::New
-    (
-        thermo,
-        turbulence()
-    )
-);
-mstm().updateCoefficients();
+//autoPtr<liquidMultiSpeciesTransportModel> mstm
+//(
+//    liquidMultiSpeciesTransportModel::New
+//    (
+//        thermo,
+//        turbulence()
+//    )
+//);
+//mstm().updateCoefficients();
 
 // Initialize species charge number [-], Molar mass [kg/mol],
 // concentration [mol/m³], diffusion coefficients [m²/s], 
 // and mobility [m²mol/J-s]
 
 //Info << "C size " << Y.size() << endl;
-const PtrList<label>& z = mstm().z();
-PtrList<dimensionedScalar> M(C.size());
-PtrList<volVectorField> N;
-N.setSize(Y.size());
-const PtrList<volScalarField>& D = mstm().D();
-PtrList<volScalarField> DEff;
-DEff.setSize(D.size());
-//Info << "D size " << D.size() << endl;
-PtrList<volScalarField> mu(Y.size()-1);
+//const PtrList<label>& z = mstm().z();
+//PtrList<dimensionedScalar> M(C.size());
+//PtrList<volVectorField> N;
+//N.setSize(Y.size());
+//const PtrList<volScalarField>& D = mstm().D();
+//PtrList<volScalarField> DEff;
+//DEff.setSize(D.size());
+////Info << "D size " << D.size() << endl;
+//PtrList<volScalarField> mu(Y.size()-1);
 
+const volScalarField& kappa(electrolyte.kappa());
+const PtrList<volScalarField>& D(electrolyte.D());
+const PtrList<label>& z = electrolyte.z();
+const PtrList<volScalarField>& t = electrolyte.transNumberModel().t();
+PtrList<dimensionedScalar> M(C.size());
+PtrList<volVectorField>& N = electrolyte.N();
+PtrList<volScalarField> mu(D.size());
+//PtrList<volScalarField> Deff(D.size());
+//PtrList<volScalarField> tEff(t.size());
+
+scalar BruggemanCoeff = 1.5;
+volScalarField porosityFactor = pow(voidfraction, BruggemanCoeff);
+
+volScalarField kappaEff = kappa*porosityFactor;
 // Species molar weight in kg/mol
-forAll(Y, speciesI)
+forAll(Y, i)
 {
     M.set
     (
-        speciesI,
+        i,
         new dimensionedScalar
         (
-           "M_"+Y[speciesI].name(),
+           "M_"+Y[i].name(),
            dimensionSet(dimMass/dimMoles),
-           mstm().W(speciesI)/1000.0
+           thermo.composition().W(i)/1000.0
         )
     );
-    N.set
+    mu.set
     (
-        speciesI,
-        new volVectorField 
-        (
-            IOobject
-            (
-                "N_"+Y[speciesI].name(),
-                runTime.timeName(),
-                mesh,
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE
-            ),
-            mesh
-            //dimensionedVector
-            //(
-            //    "N",
-            //    dimMoles/dimArea/dimTime,
-            //    vector(0.0, 0.0, 0.0)
-            //)
-        )
+        i,
+        new volScalarField(D[i]/(R*T))
     );
-    if (Y[speciesI].name() != inertSpecie)
-    {    
-        DEff.set
-        (
-            speciesI,
-            new volScalarField 
-            (
-                IOobject
-                (
-                    "DEff_"+Y[speciesI].name(),
-                    runTime.timeName(),
-                    mesh,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-                D[speciesI]*pow(voidfraction,1.5)
-            )
-        );
-        mu.set
-        (
-            speciesI,
-            new volScalarField(DEff[speciesI]/(R*T))
-        );
-    }
 }
 
-label nChargedSpecies = 0;
-forAll(Y, speciesI)
-{
-    if (z[speciesI] != 0)
-    {
-        nChargedSpecies++;
-    }
-}
+volScalarField Dm 
+(
+    IOobject
+    (
+        "Dm",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    F*z[0]*D[0]
+);
+
+volScalarField Di
+(
+    IOobject
+    (
+        "Di",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    D[0]
+);
+////label nChargedSpecies = 0;
+//forAll(Y, i)
+//{
+//    if (z[i] != 0)
+//    {
+//        nChargedSpecies++;
+//    }
+//}
 
 volScalarField rhoE
 (
@@ -584,6 +589,10 @@ volScalarField zC
     dimensionedScalar("zC", dimMoles/dimVol, 0.0)
 );
 
-scalar iAverageTime = 0.0;
+scalar iAvgTime = 0.0;
+scalar phiEsAvgTime = 0.0;
 label timeStepCounter = 0;
-label startCounter = 20;
+label startCounter = 50;
+
+const IOdictionary& electrochemDict = electrochemistry.dict();
+const word transportSolver = electrochemDict.lookup("transportSolver");

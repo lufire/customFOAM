@@ -1,0 +1,67 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     cfdemElectrochemicalFoam;
+//application     cfdemSolverPiso;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         100;
+
+deltaT          1e-5;
+
+writeControl    timeStep; //adjustableRunTime;//
+
+writeInterval   1000;//10;//0.05;//
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable off;//yes;
+
+adjustTimeStep  no;
+
+maxCo           1;
+
+maxDeltaT       1;
+
+
+libs 
+( 
+    "libextendedBoundaryConditions.so"
+    "libextendedChemistryModel.so"
+    "libliquidMultiSpeciesTransportModels.so"
+    "libelectrochemistryModels.so"
+    "liblagrangianCFDEM-PUBLIC-2.3.0.so"
+    //"libconcReactionThermophysicalModels.so"
+);
+
+// ************************************************************************* //
+

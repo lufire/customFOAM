@@ -1,0 +1,69 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.2-devel                             |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object 	C_K+;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 -3 0 0 1 0 0];
+
+internalField   uniform 7400;
+
+boundaryField
+{
+    inlet
+    {
+        type            electroNeutrality;
+        value           uniform 7400;
+        zCField         "zC";
+        //type 		    zeroGradient;
+        //type            fixedValue;
+        //value           uniform 7400;
+    }
+    outlet
+    {
+        //type 		    zeroGradient;
+        type            electroNeutrality;
+        value           uniform 7400;
+        zCField         "zC";
+    }
+    
+    currentCollector 
+    {
+        type            electroNeutrality;
+        value           uniform 7400;
+        zCField         "zC";
+    }    
+
+    separator
+    {
+        type            electroNeutrality;
+        value           uniform 7400;
+        zCField         "zC";
+    }
+
+    frontAndBack 
+    {
+        type            empty;
+    }
+//    wall 
+//    {
+//        //type            zeroGradient;
+//        type            electroNeutrality;
+//        value           uniform 7400;
+//        zCField         "zC";
+//    }    
+}
+
+
+// ************************************************************************* //

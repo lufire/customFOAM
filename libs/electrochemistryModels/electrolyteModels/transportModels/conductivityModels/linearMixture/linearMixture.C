@@ -185,6 +185,19 @@ void linearMixture::update()
         lambda += X_[i]*lambda_[i];
     }
     kappa_ = lambda*(C_[balanceIndex_]+oneC*SMALL);
+
+    // Set internal field next to boundary equal to boundary values
+    // (leads to better results for weighted potential gradient calculation)
+    forAll(kappa_.boundaryField(), patchI)
+    {
+        fvPatchScalarField& kappap = kappa_.boundaryField()[patchI];
+        const fvPatch& patch = kappa_.boundaryField()[patchI].patch();
+        const labelUList& faceCells = patch.faceCells();
+        forAll(kappap, faceI)
+        {
+            kappa_[faceCells[faceI]] = kappap[faceI];
+        }
+    }
 }
 
 } // End namespace electrolyteModels 

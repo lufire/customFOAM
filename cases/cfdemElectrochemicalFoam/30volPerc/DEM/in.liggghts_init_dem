@@ -1,0 +1,92 @@
+#echo both
+
+atom_style	granular
+atom_modify	map array
+communicate	single vel yes
+
+#--modified C.K.
+boundary        f f f
+newton		off
+
+units	    si	
+processors	1 2 2
+dimension	3
+
+region		reg block -0.001 0.001 0.0 0.003 -0.001 0.001 units box
+create_box	1 reg
+
+neighbor	0.0001 bin
+neigh_modify	delay 0 #binsize 0.01
+
+#Material properties required for new pair styles
+fix 		m1 all property/global youngsModulus peratomtype 1e6
+fix 		m2 all property/global poissonsRatio peratomtype 0.45
+fix 		m3 all property/global coefficientRestitution peratomtypepair 1 0.9
+fix 		m4 all property/global coefficientFriction peratomtypepair 1 0.5
+
+#pair style
+pair_style gran model hertz tangential history #Hertzian without cohesion
+pair_coeff	* *
+
+#timestep, gravity
+timestep	0.0000001
+
+fix		gravi all gravity 0.0 vector 0.0 -1.0 0.0
+#fix		gravi all gravity 981 vector 0.0 0.0 -1.0
+
+#viscous damping
+fix	    1	all viscous 0.1
+
+#walls
+fix	cad all mesh/surface file surface.stl type 1
+fix	meshwalls all wall/gran model hertz tangential history mesh n_meshes 1 meshes cad
+#fix   	xwalls1 all wall/gran model hertz tangential history primitive type 1 xplane -0.05
+fix     xwalls2 all wall/gran model hertz tangential history primitive type 1 xplane 0.001
+fix	ywalls1 all wall/gran model hertz tangential history primitive type 1 yplane 0.0
+fix	ywalls2 all wall/gran model hertz tangential history primitive type 1 yplane 0.003
+fix	zwalls1 all wall/gran model hertz tangential history primitive type 1 zplane -0.001
+fix	zwalls2 all wall/gran model hertz tangential history primitive type 1 zplane 0.001
+
+#distributions for insertion
+fix     pts1 all particletemplate/sphere 1 atom_type 1 density constant 7100 radius constant 0.0001
+fix     pts2 all particletemplate/sphere 1 atom_type 1 density constant 7100 radius constant 0.000075
+#fix     pts3 all particletemplate/sphere 1 atom_type 1 density constant 7 radius constant 0.0035
+#fix     pts4 all particletemplate/sphere 1 atom_type 1 density constant 7 radius constant 0.004
+#fix     pts5 all particletemplate/sphere 1 atom_type 1 density constant 7 radius constant 0.00575
+fix     pdd1 all particledistribution/discrete 1 2 pts1 1.0 pts2 0.0 #pts3 0.2 pts4 0.2 pts5 0.2
+
+#region and insertion
+group       nve_group region reg
+
+region		inreg block -0.001 0.001 0.0 0.003 -0.001 0.001 units box
+
+fix         ins nve_group insert/pack seed 10000 distributiontemplate pdd1 maxattempt 20 insert_every once overlapcheck no all_in yes particles_in_region 859 region inreg ntry_mc 10000
+#fix         ins nve_group insert/pack seed 10000 distributiontemplate pdd1 maxattempt 20 insert_every 200 overlapcheck no all_in yes volumefraction_region 0.15 region inreg ntry_mc 10000
+
+#particle insertion
+#create_atoms	1 random 170 1 inreg
+#set 		atom * diameter 0.015 density 7 vx 0 vy 0 vz 0
+#create_atoms	1 random 2292 10000 inreg
+#set 		atom * diameter 0.005 density 7 vx 0 vy 0 vz 0
+
+#apply nve integration to all particles that are inserted as single particles
+#fix		integr all nve/sphere #wenn das ausgeblendet, dann kein vel update
+fix 		integr all nve/limit radius_ratio 0.1
+#fix		2d all enforce2d
+
+#screen output
+compute		1 all erotate/sphere
+thermo_style	custom step atoms ke c_1 vol
+thermo		1000
+thermo_modify	lost ignore norm no
+compute_modify	thermo_temp dynamic yes
+
+#insert the first particles so that dump is not empty
+#run		1
+dump		dmp all custom 5000 ../DEM/post/dump.liggghts_init_dem id type type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius 
+
+run		50000 upto
+fix	    	1	all viscous 0.5
+run		100000 upto
+set 		atom * vx 0 vy 0 vz 0 omegax 0 omegay 0 omegaz 0
+write_data 	../DEM/post/data.liggghts_init_dem

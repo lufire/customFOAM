@@ -55,8 +55,9 @@ Description
 #include "smoothingModel.H"
 #include "forceModel.H"
 // ----------------------------- code addition ----------------------------- //
-#include "liquidMultiSpeciesTransportModel.H"
+#include "calculatedGradientFvPatchScalarField.H"
 #include "electrochemistryModel.H"
+//#include "liquidMultiSpeciesTransportModel.H"
 #include "OFstream.H"
 #include <iostream>
 #include <fstream>
@@ -126,6 +127,8 @@ int main(int argc, char *argv[])
         particleCloud.clockM().stop("Coupling");
 
         particleCloud.clockM().start(26,"Flow");
+
+        porosityFactor = pow(voidfraction, BruggemanCoeff);
         // get scalar source from DEM        
         //particleCloud.forceM(1).manipulateScalarField(Tsource);
         //Tsource.correctBoundaryConditions();
@@ -151,21 +154,11 @@ int main(int argc, char *argv[])
         //while (pimple.loop()) 
         //{
 
-            tmp<fv::convectionScheme<scalar> > mvConvection
-            (
-                fv::convectionScheme<scalar>::New
-                (
-                    mesh,
-                    fields,
-                    phi,
-                    mesh.divScheme("div(phi,Ci_h)")
-                )
-            );
             #include "CEqn.H"
             #include "ElectricEqn.H"
 
             //volScalarField rhoVoidfraction = rho*voidfraction;
-            #include "hsEqn.H"
+            //#include "hsEqn.H"
 
             if(particleCloud.solveFlow())
             {
@@ -191,7 +184,9 @@ int main(int argc, char *argv[])
                 Info << "skipping flow solution." << endl;
             }
         //}
-        scalar iAverage = 0.0;
+        
+        scalar iAvg = 0.0;
+        scalar phiEsAvg = electrodes[0].potential();
         {
             vectorField ilp = mesh.boundary()["separator"].patchField<volVectorField, vector>(il);
             scalarField Ap = mesh.boundary()["separator"].magSf();
@@ -202,13 +197,15 @@ int main(int argc, char *argv[])
             forAll(iNormal, faceI)
             {
                 ++faceCount;
-                iAverage += iNormal[faceI];
+                iAvg += iNormal[faceI];
             }
-            iAverage /= faceCount;
-            Info<< "Average cell current density = " << iAverage << endl; 
+            iAvg /= faceCount;
+            Info<< "Average cell current density = " << iAvg << endl; 
+            Info << "Average electrode potential = " << phiEsAvg << endl; 
             if (timeStepCounter > startCounter)
             { 
-                iAverageTime += iAverage;
+                iAvgTime += iAvg;
+                phiEsAvgTime += phiEsAvg;
             }
             ++timeStepCounter;
         }
@@ -221,8 +218,8 @@ int main(int argc, char *argv[])
             //{
             //    composition.C()[i].write();
             //}
-            iTrans.write();
-            is.write();
+            //iTrans.write();
+            //is.write();
         }
         
         // Calculate average current density at separator
@@ -235,9 +232,17 @@ int main(int argc, char *argv[])
         particleCloud.clockM().stop("Global");
     }
 
-    fileName outputFile(runTime.path()+"/../../cellCurrentDensity.txt");
+    fileName outputFile(runTime.path()+"/CurrentDensity-Potential.txt");
     OFstream os(outputFile);
-    os << "Average cell current density: " << iAverageTime/scalar(timeStepCounter-startCounter) << endl;
+    os << "Average cell current density: " 
+        << iAvgTime/scalar(timeStepCounter-startCounter) << endl;
+    os << "Average electrode potential: " 
+        << phiEsAvgTime/scalar(timeStepCounter-startCounter) << endl;
+
+    Info << "Average cell current density: " 
+        << iAvgTime/scalar(timeStepCounter-startCounter) << endl;
+    Info << "Average electrode potential: " 
+        << phiEsAvgTime/scalar(timeStepCounter-startCounter) << endl;
 
     Info<< "End\n" << endl;
 

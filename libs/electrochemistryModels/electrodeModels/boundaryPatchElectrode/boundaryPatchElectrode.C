@@ -82,6 +82,86 @@ void boundaryPatchElectrode::correctElectrodeSurface()
 void boundaryPatchElectrode::correctElectrodeConductivity()
 {}
 
+void boundaryPatchElectrode::correctCurrentDensity()
+{
+    if (CRef_[oxID_] <= 0.0 || CRef_[redID_] <= 0.0)
+    {
+        FatalErrorIn("boundaryPatchElectrode::calculateTransferCurrentDensity()")
+            << "Reference concentrations must be greater than zero"
+            << exit(FatalError);
+    }
+    else
+    {
+        // Physical constants
+        const scalar& R = constant::physicoChemical::R.value();
+        const scalar& F = constant::physicoChemical::F.value();
+
+        //const scalarField& phiEls = resistanceModel_->phiEls();
+        const scalarField& phiEls = 
+            electrolyte_.phiE().boundaryField()[patchID_];
+
+        //const scalarField& Coxs = resistanceModel_->Cs(oxID_);
+        //const scalarField& Creds = resistanceModel_->Cs(redID_);
+        const scalarField& Coxs = C_[oxID_].boundaryField()[patchID_];
+        const scalarField& Creds = C_[redID_].boundaryField()[patchID_];
+
+        Info << "Coxs: " << Coxs << endl;
+        Info << "Creds: " << Creds << endl;
+
+        const scalarField& T = 
+            electrolyte_.thermo().T().boundaryField()[patchID_];
+
+        vectorField& i = electrolyte_.i().boundaryField()[patchID_];
+
+        const tmp<vectorField> tn = mesh_.boundary()[patchName_].nf();
+        const vectorField& n = tn();
+
+        const scalar minFactor = 0.1;
+        scalar iAvg = 0.0;
+        scalar totalMagSf = 0.0;
+
+        forAll(n, faceI)
+        {
+            scalar magSf = mesh_.boundary()[patchName_].magSf()[faceI];
+            totalMagSf += magSf; 
+            
+            scalar K = R*T[faceI]/(electronNumber_*F);
+
+            scalar redFactor = 
+                pow(Creds[faceI]/CRef_[redID_],reactionOrder_[redID_]);
+            scalar oxFactor = 
+                pow(Coxs[faceI]/CRef_[oxID_],reactionOrder_[oxID_]);
+            if(redFactor<minFactor)
+            {
+                redFactor = minFactor;
+            }
+            if(oxFactor<minFactor)
+            {
+                oxFactor = minFactor;
+            }
+            eta_[faceI] = avgPhiEs_ - phiEls[faceI] - eqPotential_;
+            //+ K*log(oxFactor/redFactor);
+
+            //scalar i0 = iEx_*pow(oxFactor,1.0-alphaA_)*pow(redFactor,alphaA_);
+            scalar iT = iEx_ 
+               *(redFactor*exp((1-alphaA_)/K*eta_[faceI])
+                 -oxFactor*exp(-alphaA_/K*eta_[faceI]));
+            i[faceI] = n[faceI]*-1.0*iT;
+            Info << "faceI: " << faceI 
+                << ", eta: " << eta_[faceI] 
+                << ", phiEs: " << avgPhiEs_
+                << ", phiEls: " << phiEls[faceI] 
+                << ", oxFactor: " << oxFactor 
+                << ", redFactor: " << redFactor 
+                //<< ", i0: " << i0 
+                << ", iT: " << iT 
+                << ", i: " << i[faceI] << endl;
+            iAvg += magSf*iT;
+        }
+        iAvg /= totalMagSf;
+    }
+}
+
 void boundaryPatchElectrode::correctTransferCurrentDensity()
 {
     if (CRef_[oxID_] <= 0.0 || CRef_[redID_] <= 0.0)
@@ -118,24 +198,24 @@ void boundaryPatchElectrode::correctTransferCurrentDensity()
 
 
 
-        scalar magSf = 0.0;
-        scalar redFactor = 0.0;
-        scalar oxFactor = 0.0;
+        //scalar magSf = 0.0;
+        //scalar redFactor = 0.0;
+        //scalar oxFactor = 0.0;
         scalar i0 = 0.0;
         scalar iAvg = 0.0;
         scalar totalMagSf = 0.0;
 
         scalar eps = 1000;
-        scalar tol = 1e-4;
+        scalar tol = 1e-6;
         label iter = 0;
         label maxIter = 100;
         scalar f_BV = 0.0;
         scalar df_BV = 0.0;
         scalar eta = 0.0;
-        scalar phiEs = avgPhiEs_;
         //const scalar eta_max = 0.5;
         const scalar minFactor = 0.1;
         //scalar phiEsOld = phiEsAvg_;
+        scalar phiEs = avgPhiEs_;
 
         while(eps > tol && iter < maxIter)
         {
@@ -149,14 +229,14 @@ void boundaryPatchElectrode::correctTransferCurrentDensity()
             forAll(n, faceI)
             {
                 
-                magSf = mesh_.boundary()[patchName_].magSf()[faceI];
+                scalar magSf = mesh_.boundary()[patchName_].magSf()[faceI];
                 totalMagSf += magSf; 
                 
                 scalar K = R*T[faceI]/(electronNumber_*F);
                 //i[faceI] = currD_*-1.0*n[faceI];
-                redFactor = 
+                scalar redFactor = 
                     pow(Creds[faceI]/CRef_[redID_],reactionOrder_[redID_]);
-                oxFactor = 
+                scalar oxFactor = 
                     pow(Coxs[faceI]/CRef_[oxID_],reactionOrder_[oxID_]);
                 
                 if(redFactor<minFactor)
@@ -177,7 +257,12 @@ void boundaryPatchElectrode::correctTransferCurrentDensity()
                 }
                     eta_[faceI] = phiEs - phiEls[faceI] - eqPotential_
                         + K*log(oxFactor/redFactor);
-                    Info << "faceI: " << faceI << ", eta: " << eta_[faceI] << ", phiEs: " << phiEs << ", phiEls: " << phiEls[faceI] << ", oxFactor: " << oxFactor << ", redFactor: " << redFactor << endl;
+                    Info << "faceI: " << faceI 
+                        << ", eta: " << eta_[faceI] 
+                        << ", phiEs: " << phiEs
+                        << ", phiEls: " << phiEls[faceI] 
+                        << ", oxFactor: " << oxFactor 
+                        << ", redFactor: " << redFactor << endl;
                     //Info << "faceI: " << faceI << ", eta: " << eta_[faceI] << endl;
                     //if(eta_[faceI] > 2.0)
                     //    eta_[faceI] = 2.0;
@@ -185,13 +270,20 @@ void boundaryPatchElectrode::correctTransferCurrentDensity()
                     //    eta_[faceI] = -2.0;
                     //Info << "eta_[" << faceI << "] = " << eta_[faceI] << endl; 
                         
-                    i0 = iEx_*pow(oxFactor,1.0-alphaA_)*pow(redFactor,alphaA_);
+                    scalar i0 = iEx_*pow(oxFactor,1.0-alphaA_)*pow(redFactor,alphaA_);
 
                     scalar iT = i0 
                        *(
                            exp(alphaA_/K*eta_[faceI])
                            -exp(-(1-alphaA_)/K*eta_[faceI])
                         );
+
+                    
+                    //eta_[faceI] = avgPhiEs_ - phiEls[faceI] - eqPotential_;
+                    //scalar iT = iEx_ 
+                    //   *(redFactor*exp((1-alphaA_)/K*eta_[faceI])
+                    //     -oxFactor*exp(-(1-alphaA_)/K*eta_[faceI]));
+
                     f_BV += (iT - currD_)*magSf;
                     df_BV += (i0/K*(alphaA_*Foam::exp(alphaA_/K*eta_[faceI])
                         + (1.0-alphaA_)*Foam::exp(-(1.0-alphaA_)/K*eta_[faceI])))*magSf;
@@ -202,6 +294,7 @@ void boundaryPatchElectrode::correctTransferCurrentDensity()
 
                     //Info << "i0["<<faceI<<"] = " << i0 << endl;
                     i[faceI] = n[faceI]*-1.0*iT;
+                    Info << "i["<<faceI<<"] = " << i[faceI] << endl;
                     //scalar K = electronNumber_*F/(R*T[faceI]);
                         //eta_[faceI] = log(currD_/i0)/(alphaA_*K);
                     //i[faceI] = i0*-1.0*n[faceI]*Foam::exp(alphaA_*K*eta_[faceI]);p
@@ -255,7 +348,7 @@ void boundaryPatchElectrode::correctPotential()
 
     if (CRef_[oxID_] <= 0.0 || CRef_[redID_] <= 0.0)
     {
-        FatalErrorIn("boundaryPatchElectrode::calculateTransferCurrentDensity()")
+        FatalErrorIn("boundaryPatchElectrode::correctPotential()")
             << "Reference concentrations must be greater than zero"
             << exit(FatalError);
     }
@@ -365,12 +458,12 @@ void boundaryPatchElectrode::correctPotential()
             }
             else
             {
-            FatalErrorIn("boundaryPatchElectrode::correctPotential()")
-                << "Temperature must be > 0.0 "
-                << "\n on patch " 
-                << mesh_.boundary()[patchName_].name()
-                << " on face " << faceI << ".\n"
-                << exit(FatalError);
+                FatalErrorIn("boundaryPatchElectrode::correctPotential()")
+                    << "Temperature must be > 0.0 "
+                    << "\n on patch " 
+                    << mesh_.boundary()[patchName_].name()
+                    << " on face " << faceI << ".\n"
+                    << exit(FatalError);
             }
             phiEs_[faceI] = eta_[faceI] + phiEls[faceI] + eqPotential_
                 - R*T[faceI]/(ne*F)*log(oxFactor/redFactor);
@@ -461,7 +554,8 @@ void boundaryPatchElectrode::correctElectricity()
     }
     else
     {
-        correctTransferCurrentDensity();
+        //correctTransferCurrentDensity();
+        correctCurrentDensity();
     }
     //correctSpeciesFlux();
 }

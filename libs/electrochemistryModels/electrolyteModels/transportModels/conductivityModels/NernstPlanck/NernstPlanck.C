@@ -80,6 +80,19 @@ void NernstPlanck::update()
         kappa_ += F*F/(R*T)*z_[speciesI]*z_[speciesI]*D_[speciesI]*C_[speciesI];
         //kappa_ *= F*F/(R*T);
     }
+
+    // Set internal field next to boundary equal to boundary values
+    // (leads to better results for weighted potential gradient calculation)
+    forAll(kappa_.boundaryField(), patchI)
+    {
+        fvPatchScalarField& kappap = kappa_.boundaryField()[patchI];
+        const fvPatch& patch = kappa_.boundaryField()[patchI].patch();
+        const labelUList& faceCells = patch.faceCells();
+        forAll(kappap, faceI)
+        {
+            kappa_[faceCells[faceI]] = kappap[faceI];
+        }
+    }
 }
 
 } // End namespace electrolyteModels 

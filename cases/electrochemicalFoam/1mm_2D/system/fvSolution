@@ -1,0 +1,98 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+
+    "(phiE|p)"
+    {
+        solver           PCG;
+        preconditioner   DIC;
+        tolerance        1e-8;
+        relTol           0.01;
+        smoother         GaussSeidel;
+        maxIter          1000;
+    }
+    "(phiE|p)Final"
+    {
+        $p;
+        tolerance        1e-10;
+        relTol           0;
+    }
+
+
+    "(U|C)"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        tolerance       1e-08;
+        relTol          0.01;
+    }
+
+    "(U|C)Final"
+    {
+        $U;
+        preconditioner  DILU;
+        tolerance       1e-10;
+        relTol          0;
+    }
+}
+
+PIMPLE
+{
+    momentumPredictor no;
+    nCorrectors     2;
+    nOuterCorrectors     5;
+    nNonOrthogonalCorrectors 0;
+    pRefCell        0;
+    pRefValue       0;
+}
+SIMPLE
+{
+    momentumPredictor no;
+    nCorrectors     2;
+    nOuterCorrectors     1;
+    nNonOrthogonalCorrectors 0;
+    pRefCell        0;
+    pRefValue       0;
+
+    residualControl
+    {
+        p       1e-6;
+        U       1e-6;
+        phiE    1e-6;
+        C       1e-6;
+    }
+}
+relaxationFactors
+{
+    fields
+    {
+        U       0.8;
+        C      0.5;
+    }
+    equations
+    {
+        U            0.8;
+        UFinal       1.0;
+        "C|phiE|p"   0.5;
+        "(C|phiE|p)Final"    1.0;
+    }
+}
+
+
+// ************************************************************************* //

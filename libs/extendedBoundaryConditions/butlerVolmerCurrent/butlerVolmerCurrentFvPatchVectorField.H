@@ -97,20 +97,20 @@ class butlerVolmerCurrentFvPatchVectorField
         //- Oxidant species refence mass fraction
         scalar CRefOxidant_;
          
-         //- Reductant species refence mass fraction
-         scalar CRefReductant_;
-         
-         //- Oxidant species stoichiometric coefficnent
-         scalar gammaOxidant_;
-         
-         //- Reductant species stoichiometric coefficnent
-         scalar gammaReductant_;
+        //- Reductant species refence mass fraction
+        scalar CRefReductant_;
+        
+        //- Oxidant species stoichiometric coefficnent
+        scalar gammaOxidant_;
+        
+        //- Reductant species stoichiometric coefficnent
+        scalar gammaReductant_;
  
-         //- Exchange current density
-         scalar iEx_;
-         
+        //- Exchange current density
+        scalar iEx_;
+        
         //- Equilibrium potential (i.e. open circuit voltage)
-        scalar equilibriumPotential_;
+        scalar eqPotential_;
         
         //- Electrode potential
         scalar electrodePotential_;
@@ -120,6 +120,9 @@ class butlerVolmerCurrentFvPatchVectorField
         
         //- Cathodic charge transfer coefficient
         scalar alphaC_;
+
+        //- Number of transferred electrons
+        label nElectrons_;
 
         
 public:
