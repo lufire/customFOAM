@@ -1,0 +1,7 @@
+*.[oa]
+*~
+**/Make/*/
+*.dep
+**/lnInclude/*
+.*
+log.*
