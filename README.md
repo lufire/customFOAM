@@ -1,8 +1,8 @@
 # customFOAM
-Custom solvers and libraries for OpenFOAM (Version 2.3.x)
+Custom solvers and libraries for OpenFOAM (Version 7.x)
 
 Prerequisites:
-- OpenFOAM 2.3.x
+- OpenFOAM 7.0 
 - Optional: corresponding CFDEM library for CFDEM solvers (cfdemElectrochemicalFoam, explicitCfdemSolverPiso)
 
 Installation instructions:
