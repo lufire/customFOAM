@@ -79,7 +79,7 @@ class butlerVolmerCurrentFvPatchVectorField
 {
     // Private data
     
-        //- Name of the electrode (Anode or Cathode)
+        //- Name of the electrode (anode or cathode)
         word electrodeName_;
     
         //- Electric potential field name

@@ -53,7 +53,7 @@
                 
                 setSnGrad<calculatedGradientFvPatchScalarField>
                 (
-                    Ci.boundaryField(),
+                    Ci.boundaryFieldRef(),
                     snGrad.boundaryField()
                 );
 
@@ -64,7 +64,7 @@
                   + fvm::div(phi, Ci, "div(phi,C)") 
                   - fvm::Sp(fvc::div(phi), Ci)
                   - fvm::laplacian(Deff[i], Ci, "laplacian(D,C)")
-                  //+ fvm::div(zmuFEf,Ci, "div(zmuFEf,C)")
+                  //+ fvm::div(zmuFEf, Ci, "div(zmuFEf,C)")
                   - fvc::laplacian(z[i]*mu[i]*F*Ci, phiEl, 
                                    "laplacian(zmuFC,phiE)")
                     ==
@@ -72,7 +72,7 @@
                 );
                 CiEqn.relax();
                 fvOptions.constrain(CiEqn);
-                CiEqn.solve(mesh.solver("C"));
+                CiEqn.solve("C");
             }
             else
             {
@@ -81,14 +81,13 @@
                         phi*fvc::interpolate(Ci)
                         -(mesh.Sf() & fvc::interpolate(N[i]))
                         -(mesh.Sf() 
-                         & fvc::interpolate(t[i]/(z[i]*F), "interpolate(t)")
+                         & fvc::interpolate(t[i]/(z[i]*F))
                              *fvc::interpolate(il))
-                    )/(mesh.magSf()*fvc::interpolate(Deff[i], 
-                                                     "interpolate(D)"));
+                    )/(mesh.magSf()*fvc::interpolate(Deff[i]));
                 
                 setSnGrad<calculatedGradientFvPatchScalarField>
                 (
-                    Ci.boundaryField(),
+                    Ci.boundaryFieldRef(),
                     snGrad.boundaryField()
                 );
 
@@ -105,7 +104,7 @@
                 );
                 CiEqn.relax();
                 fvOptions.constrain(CiEqn);
-                CiEqn.solve(mesh.solver("C"));
+                CiEqn.solve("C");
             }
             Ci.correctBoundaryConditions();
             fvOptions.correct(Ci);
@@ -134,10 +133,10 @@
         //}
     }
 
-    forAll(electrodes, electrodeI)
-    {
-        electrodes[electrodeI].correctSpecies(C);
-    }       
+    //forAll(electrodes, electrodeI)
+    //{
+    //    electrodes[electrodeI].correctSpecies(C);
+    //}       
 
     { 
         volScalarField& Ci = C[balanceIndex];

@@ -111,7 +111,7 @@ void boundaryPatchElectrode::correctCurrentDensity()
         const scalarField& T = 
             electrolyte_.thermo().T().boundaryField()[patchID_];
 
-        vectorField& i = electrolyte_.i().boundaryField()[patchID_];
+        vectorField& i = electrolyte_.i().boundaryFieldRef()[patchID_];
 
         const tmp<vectorField> tn = mesh_.boundary()[patchName_].nf();
         const vectorField& n = tn();
@@ -191,12 +191,10 @@ void boundaryPatchElectrode::correctTransferCurrentDensity()
         const scalarField& T = 
             electrolyte_.thermo().T().boundaryField()[patchID_];
 
-        vectorField& i = electrolyte_.i().boundaryField()[patchID_];
+        vectorField& i = electrolyte_.i().boundaryFieldRef()[patchID_];
 
         const tmp<vectorField> tn = mesh_.boundary()[patchName_].nf();
         const vectorField& n = tn();
-
-
 
         //scalar magSf = 0.0;
         //scalar redFactor = 0.0;
@@ -368,7 +366,7 @@ void boundaryPatchElectrode::correctPotential()
         const scalarField& T = 
             electrolyte_.thermo().T().boundaryField()[patchID_];
 
-        vectorField& i = electrolyte_.i().boundaryField()[patchID_];
+        vectorField& i = electrolyte_.i().boundaryFieldRef()[patchID_];
 
         const tmp<vectorField> tn = mesh_.boundary()[patchName_].nf();
         const vectorField& n = tn();
@@ -569,7 +567,7 @@ void boundaryPatchElectrode::correctSpeciesFlux()
 
     forAll(N,specieI)
     {
-        vectorField& Ni = N[specieI].boundaryField()[patchID_];
+        vectorField& Ni = N[specieI].boundaryFieldRef()[patchID_];
         Ni = -i*stoichCoeff_[specieI]/(electronNumber_*F);
         //if(specieI == 0 && fluxCorrector_ == true)
         //{
@@ -589,7 +587,7 @@ void boundaryPatchElectrode::correctSpecies(PtrList<volScalarField>& C)
     // Hard coded precipitation reaction
     forAll(C,specieI)
     {
-        scalarField& Cp = C[specieI].boundaryField()[patchID_];
+        scalarField& Cp = C[specieI].boundaryFieldRef()[patchID_];
         forAll(Cp, faceI)
         {
             if(Cp[faceI] < Cstd*1e-3)
@@ -603,16 +601,17 @@ void boundaryPatchElectrode::correctSpecies(PtrList<volScalarField>& C)
     //bool fluxCorrector = true;
     if(fluxCorrector_ == false)
     {
+        Info << "Test correctSpecies" << endl;
         scalar sCrit = 3.0;
         const scalarField& Cref = C[2].boundaryField()[patchID_];
         scalarField Csat = Cref;
 
-        scalarField& Cp = C[0].boundaryField()[patchID_];
+        scalarField& Cp = C[oxID_].boundaryFieldRef()[patchID_];
         //scalarField& Cs = resistanceModel_->Cs(oxID_);
         PtrList<scalarField>& Cs = resistanceModel_->Cs();
         forAll(Csat,faceI)
         {
-            if(Cref[faceI]> 2.1*Cstd)
+            if(Cref[faceI] > 2.1*Cstd)
             {
                 Csat[faceI] = -0.21*Cstd + 0.975e-1*Cref[faceI]
                     + 0.125e-2*(sqr(Cref[faceI])/Cstd);

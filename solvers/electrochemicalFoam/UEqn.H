@@ -1,23 +1,24 @@
 // Solve the Momentum equation
 
-tmp<fvVectorMatrix> UEqn
+MRF.correctBoundaryVelocity(U);
+
+tmp<fvVectorMatrix> tUEqn
 (
-    fvm::ddt(U)
-  + fvm::div(phi, U)
+    fvm::ddt(U) + fvm::div(phi, U)
+  + MRF.DDt(U)
   + turbulence->divDevReff(U)
  ==
     fvOptions(U)
 );
+fvVectorMatrix& UEqn = tUEqn.ref();
 
-UEqn().relax();
+UEqn.relax();
 
-fvOptions.constrain(UEqn());
-
-volScalarField rAU(1.0/UEqn().A());
+fvOptions.constrain(UEqn);
 
 if (pimple.momentumPredictor())
 {
-    solve(UEqn() == -fvc::grad(p));
+    solve(UEqn == -fvc::grad(p));
 
     fvOptions.correct(U);
     K = 0.5*magSqr(U);

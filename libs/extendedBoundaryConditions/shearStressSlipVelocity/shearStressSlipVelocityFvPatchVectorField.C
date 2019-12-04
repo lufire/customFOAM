@@ -195,11 +195,9 @@ void Foam::shearStressSlipVelocityFvPatchVectorField::write(Ostream& os) const
         "nu", 
         nuName_
     );
-    os.writeKeyword("factor") << factor_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("exponent") << exponent_ 
-        << token::END_STATEMENT << nl;
-    writeEntry("value", os);
+    writeEntry(os, "factor", factor_);
+    writeEntry(os, "exponent", exponent_);
+    writeEntry(os, "value", *this);
 }
 
 

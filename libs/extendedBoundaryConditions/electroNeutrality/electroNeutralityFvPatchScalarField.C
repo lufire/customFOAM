@@ -43,7 +43,7 @@ electroNeutralityFvPatchScalarField
     zCName_("zC"),
     chargeNumber_(0)
 {
-    const word& speciesFieldName = this->dimensionedInternalField().name();
+    const word& speciesFieldName = this->internalField().name();
     size_t found = speciesFieldName.find("-");
     if(found == std::string::npos)
     {
@@ -92,7 +92,7 @@ electroNeutralityFvPatchScalarField
     chargeNumber_(0)
 {
 
-    const word& speciesFieldName = this->dimensionedInternalField().name();
+    const word& speciesFieldName = this->internalField().name();
     size_t found = speciesFieldName.find("-");
     if(found == std::string::npos)
     {
@@ -168,8 +168,8 @@ void Foam::electroNeutralityFvPatchScalarField::updateCoeffs()
         FatalErrorIn("electroNeutralityFvPatchScalarField::updateCoeffs()")
             << "dimensions of zC are not correct"
             << "\n    on patch " << this->patch().name()
-            << " of field " << this->dimensionedInternalField().name()
-            << " in file " << this->dimensionedInternalField().objectPath()
+            << " of field " << this->internalField().name()
+            << " in file " << this->internalField().objectPath()
             << exit(FatalError);
     }
 
@@ -180,8 +180,8 @@ void Foam::electroNeutralityFvPatchScalarField::updateCoeffs()
 void Foam::electroNeutralityFvPatchScalarField::write(Ostream& os) const
 {
     fvPatchScalarField::write(os);
-    writeEntryIfDifferent<word>(os, "zC", "zC", zCName_);
-    writeEntry("value", os);
+    writeEntry(os, "zC", zCName_);
+    writeEntry(os, "value", *this);
 }
 
 

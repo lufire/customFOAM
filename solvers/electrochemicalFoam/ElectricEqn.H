@@ -21,7 +21,7 @@ if(electrochemistry.active())
             // (leads to better results for weighted gradient calculation)
             forAll(Dm.boundaryField(), patchI)
             {
-                fvPatchScalarField& Dmp = Dm.boundaryField()[patchI];
+                const fvPatchScalarField& Dmp = Dm.boundaryField()[patchI];
                 const fvPatch& patch = Dm.boundaryField()[patchI].patch();
                 const labelUList& faceCells = patch.faceCells();
                 forAll(Dmp, faceI)
@@ -48,57 +48,49 @@ if(electrochemistry.active())
     // Update electrochemistry model 
     electrochemistry.correct();
 
-    label iter = 0;
-    label iterMax = 1; 
 
     phiEl.storePrevIter();
-    while(iter < iterMax)
-    {
-        surfaceScalarField snGrad = 
-            (
-                -(fvc::interpolate(il) & mesh.Sf())
-                +(fvc::interpolate(id) & mesh.Sf())
-            )/(mesh.magSf()*fvc::interpolate(kappa));
-
-        setSnGrad<calculatedGradientFvPatchScalarField>
+    surfaceScalarField snGrad = 
         (
-            phiEl.boundaryField(),
-            snGrad.boundaryField()
-        );
+            -(fvc::interpolate(il) & mesh.Sf())
+            +(fvc::interpolate(id) & mesh.Sf())
+        )/(mesh.magSf()*fvc::interpolate(kappa));
 
-        // Set up matrix for Poisson equation assuming electro-neutrality
-        fvScalarMatrix phiElEqn
-        (
-            fvm::laplacian(kappa, phiEl, "laplacian(kappa,phiE)")
-            == 
-            //fvc::div(id)
-            divId
-        );
-        phiElEqn.relax();
+    setSnGradient<calculatedGradientFvPatchScalarField>
+    (
+        phiEl.boundaryFieldRef(),
+        snGrad.boundaryField()
+    );
 
-        // Solve for liquid electrostatic potential
-        phiElEqn.solve();
+    // Set up matrix for Poisson equation assuming electro-neutrality
+    fvScalarMatrix phiElEqn
+    (
+        fvm::laplacian(kappa, phiEl, "laplacian(kappa,phiE)")
+        == 
+        //fvc::div(id)
+        divId
+    );
+    phiElEqn.relax();
 
-        phiEl.correctBoundaryConditions();
-        phiEl.relax();
-        // Calculate electric field 
-        E = -fvc::grad(phiEl, "grad(phiE)");
-       
-         
-        il.storePrevIter();
-        // Calculate ionic current density
-        il = kappa*E + id; 
-        il.correctBoundaryConditions();
-        il.relax();
-        //phiId -= phiElEqn.flux();
+    // Solve for liquid electrostatic potential
+    phiElEqn.solve();
 
-        iter++;
-    }
+    phiEl.correctBoundaryConditions();
+    phiEl.relax();
+    // Calculate electric field 
+    E = -fvc::grad(phiEl, "grad(phiE)");
+   
+     
+    il.storePrevIter();
+    // Calculate ionic current density
+    il = kappa*E + id; 
+    il.correctBoundaryConditions();
+    il.relax();
 
-    forAll(electrodes, electrodeI)
-    {
-        electrodes[electrodeI].correctElectricity();
-    } 
+    //forAll(electrodes, electrodeI)
+    //{
+    //    electrodes[electrodeI].correctElectricity();
+    //} 
 }
 
 // Explicitly calculate species fluxes
@@ -108,27 +100,27 @@ forAll(C, i)
         && z[i] != 0)
     {
         Di = Deff[i];
-        //if (transportSolver == "dilute")
-        //{
-        //    N[i] = 
-        //       U*C[i] 
-        //       -Di*fvc::grad(C[i], "grad(Ci)");
-        //       +z[i]*mu[i]*F*E*C[i];
-        //}
-        //else
-        //{
-        //    N[i] = 
-        //       U*C[i] 
-        //       -Di*fvc::grad(C[i], "grad(Ci)");
-        //       -t[i]/(z[i]*F)*il;
-        //}
+        if (transportSolver == "dilute")
+        {
+            N[i] = 
+               U*C[i] 
+               -Di*fvc::grad(C[i], "grad(Ci)");
+               +z[i]*mu[i]*F*E*C[i];
+        }
+        else
+        {
+            N[i] = 
+               U*C[i] 
+               -Di*fvc::grad(C[i], "grad(Ci)");
+               -t[i]/(z[i]*F)*il;
+        }
         N[i].correctBoundaryConditions();
     }
 }
-forAll(electrodes, electrodeI)
-{
-    electrodes[electrodeI].correctSpeciesFlux();
-} 
+//forAll(electrodes, electrodeI)
+//{
+//    electrodes[electrodeI].correctSpeciesFlux();
+//} 
 
 if(electrochemistry.active())
 {

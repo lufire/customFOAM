@@ -81,7 +81,7 @@ Foam::tmp<Foam::scalarField> Foam::binaryDiffusivityModels::Fuller::D
 ) const
 {
     tmp<scalarField> tD(new scalarField(T.size()));
-    scalarField& d = tD();
+    scalarField& d = tD.ref();
 
     forAll(T, facei)
     {
@@ -115,7 +115,7 @@ Foam::binaryDiffusivityModels::Fuller::D() const
         )
     );
 
-    volScalarField& d = tD();
+    volScalarField& d = tD.ref();
 
     forAll(this->T_, celli)
     {
@@ -128,7 +128,7 @@ Foam::binaryDiffusivityModels::Fuller::D() const
     {
         const fvPatchScalarField& pT = this->T_.boundaryField()[patchi];
         const fvPatchScalarField& pp = this->p_.boundaryField()[patchi];
-        fvPatchScalarField& pD = d.boundaryField()[patchi];
+        fvPatchScalarField& pD = d.boundaryFieldRef()[patchi];
 
         forAll(pT, facei)
         {

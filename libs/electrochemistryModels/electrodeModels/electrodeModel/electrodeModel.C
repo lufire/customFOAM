@@ -134,7 +134,7 @@ electrodeModel::electrodeModel
     oxName_(electrodeDict_.lookup("oxidant")),
     redName_(electrodeDict_.lookup("reductant")),
     C_(electrolyte.thermo().composition().C()),
-    electronNumber_(readLabel(electrodeDict_.lookup("electronNumber"))),
+    electronNumber_(readLabel(electrodeDict_.lookup("electrons"))),
     stoichCoeff_(C_.size()),
     reactionOrder_(C_.size()),
     CRef_(C_.size()),

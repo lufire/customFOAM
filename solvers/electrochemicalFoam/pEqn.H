@@ -1,36 +1,50 @@
-surfaceScalarField rAUf("rAUf", fvc::interpolate(rAU));
-
-volVectorField HbyA("HbyA", U);
-HbyA = rAU*UEqn().H();
-
-if (pimple.nCorrPISO() <= 1)
-{
-    UEqn.clear();
-}
-
+volScalarField rAU(1.0/UEqn.A());
+volVectorField HbyA(constrainHbyA(rAU*UEqn.H(), U, p));
 surfaceScalarField phiHbyA
 (
     "phiHbyA",
-    (fvc::interpolate(HbyA) & mesh.Sf())
-  + rAUf*fvc::ddtCorr(U, phi)
+    fvc::flux(HbyA)
+  + MRF.zeroFilter(fvc::interpolate(rAU)*fvc::ddtCorr(U, phi, Uf))
 );
 
-fvOptions.makeRelative(phiHbyA);
+MRF.makeRelative(phiHbyA);
 
-adjustPhi(phiHbyA, U, p);
+if (p.needReference())
+{
+    fvc::makeRelative(phiHbyA, U);
+    adjustPhi(phiHbyA, U, p);
+    fvc::makeAbsolute(phiHbyA, U);
+}
+
+tmp<volScalarField> rAtU(rAU);
+
+if (pimple.consistent())
+{
+    rAtU = 1.0/max(1.0/rAU - UEqn.H1(), 0.1/rAU);
+    phiHbyA +=
+        fvc::interpolate(rAtU() - rAU)*fvc::snGrad(p)*mesh.magSf();
+    HbyA -= (rAU - rAtU())*fvc::grad(p);
+}
+
+if (pimple.nCorrPiso() <= 1)
+{
+    tUEqn.clear();
+}
+
+// Update the pressure BCs to ensure flux consistency
+constrainPressure(p, U, phiHbyA, rAtU(), MRF);
 
 // Non-orthogonal pressure corrector loop
 while (pimple.correctNonOrthogonal())
 {
-    // Pressure corrector
     fvScalarMatrix pEqn
     (
-        fvm::laplacian(rAUf, p) == fvc::div(phiHbyA)
+        fvm::laplacian(rAtU(), p) == fvc::div(phiHbyA)
     );
 
     pEqn.setReference(pRefCell, pRefValue);
 
-    pEqn.solve(mesh.solver(p.select(pimple.finalInnerIter())));
+    pEqn.solve();
 
     if (pimple.finalNonOrthogonalIter())
     {
@@ -43,8 +57,14 @@ while (pimple.correctNonOrthogonal())
 // Explicitly relax pressure for momentum corrector
 p.relax();
 
-U = HbyA - rAU*fvc::grad(p);
+U = HbyA - rAtU*fvc::grad(p);
 U.correctBoundaryConditions();
 fvOptions.correct(U);
+
+// Correct Uf if the mesh is moving
+fvc::correctUf(Uf, U, phi);
+
+// Make the fluxes relative to the mesh motion
+fvc::makeRelative(phi, U);
 
 K = 0.5*magSqr(U);

@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,16 +25,26 @@ License
 
 #include "concBasicMultiComponentMixture.H"
 
+// * * * * * * * * * * * * * Static Member Functions * * * * * * * * * * * * //
+
+namespace Foam
+{
+    defineTypeNameAndDebug(concBasicMultiComponentMixture, 0);
+}
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::concBasicMultiComponentMixture::concBasicMultiComponentMixture
 (
     const dictionary& thermoDict,
     const wordList& specieNames,
-    const fvMesh& mesh
+    const fvMesh& mesh,
+    const word& phaseName
 )
 :
+    basicMixture(thermoDict, mesh, phaseName),
     species_(specieNames),
+    active_(species_.size(), true),
     Y_(species_.size()),
     C_(species_.size()),
     initialRho_
@@ -50,16 +60,20 @@ Foam::concBasicMultiComponentMixture::concBasicMultiComponentMixture
         mesh
     )
 {
+    tmp<volScalarField> tCdefault;
+
     forAll(species_, i)
     {
         IOobject header
         (
-            "C_"+species_[i],
+            IOobject::groupName("C_"+species_[i], phaseName),
             mesh.time().timeName(),
             mesh,
             IOobject::NO_READ
         );
-        if (header.headerOk())
+
+        // check if field exists and can be read
+        if (header.typeHeaderOk<volScalarField>(true))
         {
             C_.set
             (
@@ -68,7 +82,7 @@ Foam::concBasicMultiComponentMixture::concBasicMultiComponentMixture
                 (
                     IOobject
                     (
-                        "C_"+species_[i],
+                        IOobject::groupName("C_"+species_[i], phaseName),
                         mesh.time().timeName(),
                         mesh,
                         IOobject::MUST_READ,
@@ -80,18 +94,51 @@ Foam::concBasicMultiComponentMixture::concBasicMultiComponentMixture
         }
         else
         {
-            volScalarField Cdefault
-            (
-                IOobject
+            // Read Ydefault if not already read
+            if (!tCdefault.valid())
+            {
+                word CdefaultName(IOobject::groupName("Cdefault", phaseName));
+
+                IOobject timeIO
                 (
-                    "Cdefault",
+                    CdefaultName,
                     mesh.time().timeName(),
                     mesh,
                     IOobject::MUST_READ,
                     IOobject::NO_WRITE
-                ),
-                mesh
-            );
+                );
+
+                IOobject constantIO
+                (
+                    CdefaultName,
+                    mesh.time().constant(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE
+                );
+
+                IOobject time0IO
+                (
+                    CdefaultName,
+                    Time::timeName(0),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE
+                );
+
+                if (timeIO.typeHeaderOk<volScalarField>(true))
+                {
+                    tCdefault = new volScalarField(timeIO, mesh);
+                }
+                else if (constantIO.typeHeaderOk<volScalarField>(true))
+                {
+                    tCdefault = new volScalarField(constantIO, mesh);
+                }
+                else
+                {
+                    tCdefault = new volScalarField(time0IO, mesh);
+                }
+            }
 
             C_.set
             (
@@ -100,13 +147,13 @@ Foam::concBasicMultiComponentMixture::concBasicMultiComponentMixture
                 (
                     IOobject
                     (
-                        "C_"+species_[i],
+                        IOobject::groupName("C_"+species_[i], phaseName),
                         mesh.time().timeName(),
                         mesh,
                         IOobject::NO_READ,
                         IOobject::AUTO_WRITE
                     ),
-                    Cdefault
+                    tCdefault()
                 )
             );
         }
@@ -117,17 +164,18 @@ Foam::concBasicMultiComponentMixture::concBasicMultiComponentMixture
             (
                 IOobject
                 (
-                    species_[i],
+                    IOobject::groupName(species_[i], phaseName),
                     mesh.time().timeName(),
                     mesh,
                     IOobject::NO_READ,
-                    IOobject::NO_WRITE
+                    IOobject::AUTO_WRITE
                 ),
                 mesh,
                 dimensionedScalar("Ydefault", dimless, 0.0)
             )
         );
     }
+
     // Do not enforce constraint of sum of mass fractions to equal 1 here
     // - not applicable to all models
 }

@@ -285,21 +285,14 @@ void Foam::MeekerSethSlipVelocityFvPatchVectorField::write(Ostream& os) const
         "lambda", 
         lambdaName_
     );
-    os.writeKeyword("alpha") << alpha_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("beta") << beta_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("gamma") << gamma_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("sg") << sg_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("rho") << rho_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("tau0") << tau0_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("Ustar") << Ustar_ 
-        << token::END_STATEMENT << nl;
-    writeEntry("value", os);
+    writeEntry(os, "alpha", alpha_);
+    writeEntry(os, "beta", beta_);
+    writeEntry(os, "gamma", gamma_);
+    writeEntry(os, "sg", sg_);
+    writeEntry(os, "rho", rho_);
+    writeEntry(os, "tau0", tau0_);
+    writeEntry(os, "Ustar", Ustar_);
+    writeEntry(os, "value", *this);
 }
 
 

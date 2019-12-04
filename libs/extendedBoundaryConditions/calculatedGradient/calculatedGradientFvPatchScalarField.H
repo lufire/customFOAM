@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2019 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,9 +24,6 @@ License
 Class
     Foam::calculatedGradientFvPatchScalarField
 
-Group
-    grpInletBoundaryConditions grpWallBoundaryConditions
-
 Description
     This boundary condition sets the pressure gradient to the provided value
     such that the flux on the boundary is that specified by the velocity
@@ -34,13 +31,13 @@ Description
 
     Example of the boundary condition specification:
     \verbatim
-    myPatch
+    <patchName>
     {
         type            calculatedGradient;
     }
     \endverbatim
 
-SeeAlso
+See also
     Foam::fixedGradientFvPatchField
 
 SourceFiles
@@ -48,12 +45,11 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef calculatedGradientFvPatchScalarFields_H
-#define calculatedGradientFvPatchScalarFields_H
+#ifndef calculatedGradientFvPatchScalarField_H
+#define calculatedGradientFvPatchScalarField_H
 
 #include "fvPatchFields.H"
 #include "fixedGradientFvPatchFields.H"
-#include "Switch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -68,7 +64,7 @@ class calculatedGradientFvPatchScalarField
 :
     public fixedGradientFvPatchScalarField
 {
-    // Private data
+    // Private Data
 
         //- Current time index (used for updating)
         label curTimeIndex_;
@@ -107,7 +103,7 @@ public:
             const fvPatchFieldMapper&
         );
 
-        //- Construct as copy
+        //- Copy constructor
         calculatedGradientFvPatchScalarField
         (
             const calculatedGradientFvPatchScalarField&
@@ -122,7 +118,7 @@ public:
             );
         }
 
-        //- Construct as copy setting internal field reference
+        //- Copy constructor setting internal field reference
         calculatedGradientFvPatchScalarField
         (
             const calculatedGradientFvPatchScalarField&,
@@ -142,7 +138,7 @@ public:
         }
 
 
-    // Member functions
+    // Member Functions
 
         //- Update the patch pressure gradient field from the given snGradp
         virtual void updateCoeffs(const scalarField& snGradp);
@@ -166,9 +162,9 @@ public:
 namespace Foam
 {
     template<class GradBC>
-    inline void setSnGrad
+    inline void setSnGradient
     (
-        volScalarField::GeometricBoundaryField& bf,
+        volScalarField::Boundary& bf,
         const FieldField<fvsPatchField, scalar>& snGrad
     )
     {
@@ -182,13 +178,13 @@ namespace Foam
     }
 
     template<class GradBC>
-    inline void setSnGrad
+    inline void setSnGradient
     (
-        volScalarField::GeometricBoundaryField& bf,
-        const tmp<FieldField<fvsPatchField, scalar> >& tsnGrad
+        volScalarField::Boundary& bf,
+        const tmp<FieldField<fvsPatchField, scalar>>& tsnGrad
     )
     {
-        setSnGrad<GradBC>(bf, tsnGrad());
+        setSnGradient<GradBC>(bf, tsnGrad());
     }
 }
 

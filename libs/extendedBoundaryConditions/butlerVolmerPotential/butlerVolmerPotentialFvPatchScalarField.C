@@ -196,7 +196,7 @@ void Foam::butlerVolmerPotentialFvPatchScalarField::updateCoeffs()
     // patch of electric field
     const volScalarField& phiE =
          db().lookupObject<volScalarField>
-         (this->dimensionedInternalField().name()); 
+         (this->internalField().name()); 
 
     const fvPatchField<scalar>& phiEp =
         patch().patchField<volScalarField, scalar>(phiE);
@@ -335,8 +335,8 @@ void Foam::butlerVolmerPotentialFvPatchScalarField::updateCoeffs()
                     {
                         Info << "Newton iterations did not converge within " << iter 
                         << " iterations \n for patch " << this->patch().name() 
-                        << " of field " << this->dimensionedInternalField().name()
-                        << " in file " << this->dimensionedInternalField().objectPath()
+                        << " of field " << this->internalField().name()
+                        << " in file " << this->internalField().objectPath()
                         << " of face " << faceI << ".\n"
                         << " Residual error is " << eps;                
                     }                        
@@ -347,8 +347,8 @@ void Foam::butlerVolmerPotentialFvPatchScalarField::updateCoeffs()
                 FatalErrorIn("butlerVolmerPotentialFvPatchScalarField::updateCoeffs()")
                 << "Temperature <= 0.0"
                 << "\n    on patch " << this->patch().name()
-                << " of field " << this->dimensionedInternalField().name()
-                << " in file " << this->dimensionedInternalField().objectPath()
+                << " of field " << this->internalField().name()
+                << " in file " << this->internalField().objectPath()
                 << exit(FatalError);
             }
             
@@ -365,8 +365,8 @@ void Foam::butlerVolmerPotentialFvPatchScalarField::updateCoeffs()
         FatalErrorIn("butlerVolmerPotentialFvPatchScalarField::updateCoeffs()")
             << "dimensions of j are not correct"
             << "\n    on patch " << this->patch().name()
-            << " of field " << this->dimensionedInternalField().name()
-            << " in file " << this->dimensionedInternalField().objectPath()
+            << " of field " << this->internalField().name()
+            << " in file " << this->internalField().objectPath()
             << exit(FatalError);
     }
 
@@ -378,7 +378,7 @@ void Foam::butlerVolmerPotentialFvPatchScalarField::write(Ostream& os) const
 {
     fvPatchScalarField::write(os);
     writeEntryIfDifferent<word>(os, "j", "j", jName_);
-    writeEntry("value", os);
+    writeEntry(os, "value", *this);
 }
 
 

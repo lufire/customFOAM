@@ -37,7 +37,7 @@ SourceFiles
 #define polynomialDiff_H
 
 #include "diffusivityModel.H"
-#include "polynomial.H"
+#include "PolynomialEntry.H"
 
 //#include "dimensionedScalar.H"
 //#include "volFields.H"
@@ -73,7 +73,7 @@ class polynomialDiff
         const dimensionedScalar Cstd_; 
 
         //- List of polynomials for the diffusivity calculation
-        PtrList<polynomial> DPoly_; 
+        PtrList<Function1<scalar>> DPoly_; 
   
   
 public:

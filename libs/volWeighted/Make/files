@@ -1,0 +1,4 @@
+volWeighted.C
+vecWeighted.C
+
+LIB = $(FOAM_USER_LIBBIN)/libvolWeighted

@@ -109,8 +109,11 @@ class butlerVolmerPotentialFvPatchScalarField
          //- Exchange current density
          scalar jEx_;
          
+         //- Average applied current density
+         scalar jAvg_;
+
         //- Equilibrium potential (i.e. open circuit voltage)
-        scalar equilibriumPotential_;
+        scalar eqPotential_;
         
         //- Electrode potential
         scalar electrodePotential_;        

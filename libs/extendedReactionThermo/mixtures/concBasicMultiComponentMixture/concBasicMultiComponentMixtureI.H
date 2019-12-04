@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,6 +22,46 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 \*---------------------------------------------------------------------------*/
+
+inline const Foam::speciesTable&
+Foam::concBasicMultiComponentMixture::species() const
+{
+    return species_;
+}
+
+
+inline bool Foam::concBasicMultiComponentMixture::contains
+(
+    const word& specieName
+) const
+{
+    return species_.contains(specieName);
+}
+
+
+inline bool Foam::concBasicMultiComponentMixture::active(label speciei) const
+{
+    return active_[speciei];
+}
+
+
+inline const Foam::List<bool>& Foam::concBasicMultiComponentMixture::active() const
+{
+    return active_;
+}
+
+
+inline void Foam::concBasicMultiComponentMixture::setActive(label speciei)
+{
+    active_[speciei] = true;
+}
+
+
+inline void Foam::concBasicMultiComponentMixture::setInactive(label speciei)
+{
+    active_[speciei] = false;
+}
+
 
 inline Foam::PtrList<Foam::volScalarField>&
 Foam::concBasicMultiComponentMixture::Y()
@@ -114,34 +154,5 @@ inline const Foam::volScalarField& Foam::concBasicMultiComponentMixture::C
 {
     return C_[species_[specieName]];
 }
-
-inline bool Foam::concBasicMultiComponentMixture::contains
-(
-    const word& specieName
-) const
-{
-    return species_.contains(specieName);
-}
-
-
-inline Foam::scalar Foam::concBasicMultiComponentMixture::fres
-(
-    const scalar ft,
-    const scalar stoicRatio
-) const
-{
-    return max(ft - (1.0 - ft)/stoicRatio, 0.0);
-}
-
-
-inline Foam::tmp<Foam::volScalarField> Foam::concBasicMultiComponentMixture::fres
-(
-    const volScalarField& ft,
-    const dimensionedScalar& stoicRatio
-) const
-{
-    return max(ft - (scalar(1) - ft)/stoicRatio.value(), scalar(0));
-}
-
 
 // ************************************************************************* //

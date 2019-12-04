@@ -268,7 +268,7 @@ void porousLayer::correctSpeciesFlux(vectorField& N)
 
     forAll(Csat,faceI)
     {
-        if(Cref[faceI]> 2.1*Cstd)
+        if(Cref[faceI] > 2.1*Cstd)
         {
             Csat[faceI] = -0.21*Cstd + 0.975e-1*Cref[faceI]
                 + 0.125e-2*(sqr(Cref[faceI])/Cstd);

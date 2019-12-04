@@ -1,6 +1,7 @@
 mixtures/concBasicMultiComponentMixture/concBasicMultiComponentMixture.C
+mixtures/concBasicSpecieMixture/concBasicSpecieMixture.C
 
 concReactionThermo/concReactionThermo.C
 concReactionThermo/concReactionThermos.C
 
-LIB = $(FOAM_USER_LIBBIN)/libconcReactionThermophysicalModels
+LIB = $(FOAM_LIBBIN)/libconcReactionThermophysicalModels

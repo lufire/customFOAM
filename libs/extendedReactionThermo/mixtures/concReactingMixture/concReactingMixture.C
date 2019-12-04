@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,11 +32,12 @@ template<class ThermoType>
 Foam::concReactingMixture<ThermoType>::concReactingMixture
 (
     const dictionary& thermoDict,
-    const fvMesh& mesh
+    const fvMesh& mesh,
+    const word& phaseName
 )
 :
     speciesTable(),
-    autoPtr<chemistryReader<ThermoType> >
+    autoPtr<chemistryReader<ThermoType>>
     (
         chemistryReader<ThermoType>::New(thermoDict, *this)
     ),
@@ -44,15 +45,20 @@ Foam::concReactingMixture<ThermoType>::concReactingMixture
     (
         thermoDict,
         *this,
-        autoPtr<chemistryReader<ThermoType> >::operator()().speciesThermo(),
-        mesh
+        autoPtr<chemistryReader<ThermoType>>::operator()().speciesThermo(),
+        mesh,
+        phaseName
     ),
-    PtrList<Reaction<ThermoType> >
+    PtrList<Reaction<ThermoType>>
     (
-        autoPtr<chemistryReader<ThermoType> >::operator()().reactions()
+        autoPtr<chemistryReader<ThermoType>>::operator()().reactions()
+    ),
+    speciesComposition_
+    (
+        autoPtr<chemistryReader<ThermoType>>::operator()().specieComposition()
     )
 {
-    autoPtr<chemistryReader<ThermoType> >::clear();
+    autoPtr<chemistryReader<ThermoType>>::clear();
 }
 
 

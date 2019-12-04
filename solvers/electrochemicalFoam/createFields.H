@@ -1,25 +1,21 @@
-//Info<< nl << "Creating reaction model" << endl;
-//
-//autoPtr<combustionModels::concCombustionModel> reaction // OF 2.3
-//(
-//    combustionModels::concCombustionModel::New(mesh) // OF 2.3
-//);
+#include "createRDeltaT.H"
 
-autoPtr<concChemistryModel> pChemistry // OF 2.3
-(
-    concChemistryModel::New(mesh) // OF 2.3
-);
-
-concChemistryModel& chemistry = pChemistry(); // OF 2.3
-
-concReactionThermo& thermo = chemistry.thermo(); // OF 2.3
+Info<< "Reading thermophysical properties\n" << endl;
+autoPtr<concReactionThermo> pThermo(concReactionThermo::New(mesh));
+concReactionThermo& thermo = pThermo();
 thermo.validate(args.executable(), "h", "e");
 
-concBasicMultiComponentMixture& composition = thermo.composition();
+concBasicSpecieMixture& composition = thermo.composition();
 PtrList<volScalarField>& Y = composition.Y();
 PtrList<volScalarField>& C = composition.C();
 
-word inertSpecie(thermo.lookup("inertSpecie"));
+const word inertSpecie(thermo.lookup("inertSpecie"));
+if (!composition.species().found(inertSpecie))
+{
+    FatalIOErrorIn(args.executable().c_str(), thermo)
+        << "Inert specie " << inertSpecie << " not found in available species "
+        << composition.species() << exit(FatalIOError);
+}
 
 volScalarField rho
 (
@@ -31,7 +27,7 @@ volScalarField rho
         IOobject::NO_READ,
         IOobject::AUTO_WRITE
     ),
-    thermo.rho()//*dimensionedScalar("1",dimMass/dimVol,1.0)
+    thermo.rho()
 );
 
 Info<< "Reading field U\n" << endl;
@@ -56,6 +52,13 @@ volScalarField& T = thermo.T();
 
 #include "createPhi.H"
 //#include "compressibleCreatePhi.H"
+//
+//pressureControl pressureControl(p, rho, pimple.dict(), false);
+
+label pRefCell = 0;
+scalar pRefValue = 0.0;
+setRefCell(p, pimple.dict(), pRefCell, pRefValue);
+mesh.setFluxRequired(p.name());
 
 //Info << "Creating turbulence model.\n" << nl;
 //autoPtr<compressible::turbulenceModel> turbulence
@@ -92,82 +95,64 @@ autoPtr<incompressible::turbulenceModel> turbulence
 //    dimensionedScalar("dpdt", p.dimensions()/dimTime, 0)
 //);
 
-label pRefCell = 0;
-scalar pRefValue = 0.0;
-setRefCell(p, mesh.solutionDict().subDict("PIMPLE"), pRefCell, pRefValue);
 
 Info<< "Creating field kinetic energy K\n" << endl;
 volScalarField K("K", 0.5*magSqr(U));
 
-multivariateSurfaceInterpolationScheme<scalar>::fieldTable fields;
+//multivariateSurfaceInterpolationScheme<scalar>::fieldTable fields;
+//
+//forAll(Y, speciesI)
+//{
+//    fields.add(Y[speciesI]);
+//}
+//fields.add(hs);
 
-forAll(Y, speciesI)
-{
-    fields.add(Y[speciesI]);
-}
-fields.add(hs);
-
-DimensionedField<scalar, volMesh> chemistrySh
-(
-    IOobject
-    (
-        "chemistry::Sh",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::NO_WRITE
-    ),
-    mesh,
-    dimensionedScalar("chemistrySh", dimEnergy/dimTime/dimVolume, 0.0)
-);
-
-volScalarField dQ
-(
-    IOobject
-    (
-        "dQ",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    mesh,
-    dimensionedScalar("dQ", dimEnergy/dimTime, 0.0)
-);
-
-volScalarField gamma 
-(
-    IOobject
-    (
-        "gamma",
-        runTime.timeName(),
-        mesh,
-        IOobject::NO_READ,
-        IOobject::AUTO_WRITE
-    ),
-    mesh,
-    dimensionedScalar("zero", dimless, 0.0)
-);
-
-//IOdictionary transportProperties
+//DimensionedField<scalar, volMesh> chemistrySh
 //(
 //    IOobject
 //    (
-//        "transportProperties",
-//        runTime.constant(),
+//        "chemistry::Sh",
+//        runTime.timeName(),
 //        mesh,
-//        IOobject::MUST_READ,
+//        IOobject::NO_READ,
 //        IOobject::NO_WRITE
-//    )
+//    ),
+//    mesh,
+//    dimensionedScalar("chemistrySh", dimEnergy/dimTime/dimVolume, 0.0)
 //);
 
+//volScalarField dQ
+//(
+//    IOobject
+//    (
+//        "dQ",
+//        runTime.timeName(),
+//        mesh,
+//        IOobject::NO_READ,
+//        IOobject::AUTO_WRITE
+//    ),
+//    mesh,
+//    dimensionedScalar("dQ", dimEnergy/dimTime, 0.0)
+//);
 
+//volScalarField gamma 
+//(
+//    IOobject
+//    (
+//        "gamma",
+//        runTime.timeName(),
+//        mesh,
+//        IOobject::NO_READ,
+//        IOobject::AUTO_WRITE
+//    ),
+//    mesh,
+//    dimensionedScalar("zero", dimless, 0.0)
+//);
 
 const dimensionedScalar& R = constant::physicoChemical::R;
 const dimensionedScalar& F = constant::physicoChemical::F;
 const dimensionedScalar& kB = constant::physicoChemical::k;
 const dimensionedScalar& e = constant::electromagnetic::e;
-
 
 // Create electrochemistry model
 electrochemistryModels::electrochemistryModel electrochemistry(thermo);
@@ -206,7 +191,6 @@ volScalarField div_il
 //    dimensionedScalar("iTrans", dimCurrent/dimVolume, 0.0)
 //);
 volScalarField& phiEl = electrolyte.phiE();
-//volVectorField gradPhiE = fvc::grad(phiEl);
 
 volVectorField& id = electrolyte.iD();
 volVectorField& il = electrolyte.i();
@@ -254,7 +238,7 @@ forAll(Y, speciesI)
         (
            "M_"+Y[speciesI].name(),
            dimensionSet(dimMass/dimMoles),
-           thermo.composition().W(speciesI)/1000.0
+           thermo.composition().Wi(speciesI)/1000.0
         )
     );
     Deff.set
@@ -352,7 +336,7 @@ volScalarField zC
 scalar iAvgTime = 0.0;
 scalar phiEsAvgTime = 0.0;
 label timeStepCounter = 0;
-label startCounter = 50;
+label startCounter = 200;
 
 const IOdictionary& electrochemDict = electrochemistry.dict();
 const word transportSolver = electrochemDict.lookup("transportSolver");
@@ -416,3 +400,5 @@ const word transportSolver = electrochemDict.lookup("transportSolver");
 //volVectorField i_star = il/C_ref;
 //volVectorField id_star = id/C_ref;
  
+#include "createMRF.H"
+#include "createFvOptions.H"

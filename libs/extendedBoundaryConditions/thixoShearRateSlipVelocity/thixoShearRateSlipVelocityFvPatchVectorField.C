@@ -217,13 +217,10 @@ void Foam::thixoShearRateSlipVelocityFvPatchVectorField::write(Ostream& os) cons
         "lambda", 
         lambdaName_
     );
-    os.writeKeyword("alpha") << alpha_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("gamma") << gamma_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("beta") << beta_ 
-        << token::END_STATEMENT << nl;
-    writeEntry("value", os);
+    writeEntry(os, "alpha", alpha_);
+    writeEntry(os, "gamma", gamma_);
+    writeEntry(os, "beta", beta_);
+    writeEntry(os, "value", *this);
 }
 
 

@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2019 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,7 +35,7 @@ SourceFiles
 #ifndef concMultiComponentMixture_H
 #define concMultiComponentMixture_H
 
-#include "concBasicMultiComponentMixture.H"
+#include "concBasicSpecieMixture.H"
 #include "HashPtrTable.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -50,9 +50,9 @@ namespace Foam
 template<class ThermoType>
 class concMultiComponentMixture
 :
-    public concBasicMultiComponentMixture
+    public concBasicSpecieMixture
 {
-    // Private data
+    // Private Data
 
         //- Species data
         PtrList<ThermoType> speciesData_;
@@ -64,8 +64,6 @@ class concMultiComponentMixture
         //  cell/face mixture thermo data
         mutable ThermoType mixtureVol_;
 
-        //- Initial mixture density
-        //volScalarField initialRho_;
 
     // Private Member Functions
 
@@ -73,7 +71,8 @@ class concMultiComponentMixture
         //  data for the first specie to initialise the mixture thermo data
         const ThermoType& constructSpeciesData(const dictionary& thermoDict);
 
-        //- Calculate the mass fractions from the concentrations and the mixture density
+        //- Calculate the mass fractions from the concentrations 
+        //  and the mixture density
         void calculateMassFractions();
 
         //- Correct the mass fractions to sum to 1
@@ -91,17 +90,19 @@ public:
 
     // Constructors
 
-        //- Construct from dictionary, specie names, thermo database and mesh
+        //- Construct from dictionary, specie names, thermo database,
+        //  mesh and phase name
         concMultiComponentMixture
         (
             const dictionary&,
             const wordList& specieNames,
             const HashPtrTable<ThermoType>& thermoData,
-            const fvMesh&
+            const fvMesh&,
+            const word&
         );
 
-        //- Construct from dictionary and mesh
-        concMultiComponentMixture(const dictionary&, const fvMesh&);
+        //- Construct from dictionary, mesh and phase name
+        concMultiComponentMixture(const dictionary&, const fvMesh&, const word&);
 
 
     //- Destructor
@@ -109,7 +110,13 @@ public:
     {}
 
 
-    // Member functions
+    // Member Functions
+
+        //- Return the instantiated type name
+        static word typeName()
+        {
+            return "concMultiComponentMixture<" + ThermoType::typeName() + '>';
+        }
 
         const ThermoType& cellMixture(const label celli) const;
 
@@ -158,7 +165,7 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #ifdef NoRepository
-#   include "concMultiComponentMixture.C"
+    #include "concMultiComponentMixture.C"
 #endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

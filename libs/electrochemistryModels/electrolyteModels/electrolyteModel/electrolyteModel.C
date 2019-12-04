@@ -27,7 +27,7 @@ License
 #include "electrolyteModel.H"
 #include "dimensionedConstants.H"
 #include "constants.H" 
-#include "concChemistryModel.H"
+//#include "concChemistryModel.H"
 //#include "diffusivityModel.H"
 //#include "conductivityModel.H"
 
@@ -262,37 +262,47 @@ void electrolyteModel::updateMolarFractions()
 //void electrolyteModel::updateMolarFractions()
 {
     const PtrList<volScalarField>& Y = thermo_.composition().Y(); 
-    forAll(Y[0].internalField(), cellI)
+    //forAll(Y[0].internalField(), cellI)
+    //{
+	//    scalar tW = 0.0;
+    //    forAll(Y, i)
+    //    {
+	//        tW +=  Y[i].internalField()[cellI]/W(i);
+    //    }
+    //    tW = 1.0/tW;
+    //    forAll(Y, i)
+    //    {
+	//        x_[i].internalField()[cellI] =  Y[i].internalField()[cellI]*tW/W(i);
+    //    }
+    //}
+
+    //forAll(Y[0].boundaryField(), patchI)
+    //{
+
+	//    forAll(Y[0].boundaryField()[patchI], faceI)
+	//    {
+	//        scalar ptW = 0.0;
+	//	
+    //        forAll(Y, i)
+    //        {
+	//            ptW +=  Y[i].boundaryField()[patchI][faceI]/W(i);
+	//        }
+	//        ptW = 1.0/ptW;
+    //        forAll(Y, i)
+    //        {
+	//            x_[i].boundaryField()[patchI][faceI] =  Y[i].boundaryField()[patchI][faceI]*ptW/W(i);
+	//        }
+    //    }
+    //}
+	volScalarField tW = Y[0]/W(0)*0.0;
+    forAll(Y, i)
     {
-	    scalar tW = 0.0;
-        forAll(Y, i)
-        {
-	        tW +=  Y[i].internalField()[cellI]/W(i);
-        }
-        tW = 1.0/tW;
-        forAll(Y, i)
-        {
-	        x_[i].internalField()[cellI] =  Y[i].internalField()[cellI]*tW/W(i);
-        }
+        tW +=  Y[i]/W(i);
     }
-
-    forAll(Y[0].boundaryField(), patchI)
+    tW = 1.0/tW;
+    forAll(Y, i)
     {
-
-	    forAll(Y[0].boundaryField()[patchI], faceI)
-	    {
-	        scalar ptW = 0.0;
-		
-            forAll(Y, i)
-            {
-	            ptW +=  Y[i].boundaryField()[patchI][faceI]/W(i);
-	        }
-	        ptW = 1.0/ptW;
-            forAll(Y, i)
-            {
-	            x_[i].boundaryField()[patchI][faceI] =  Y[i].boundaryField()[patchI][faceI]*ptW/W(i);
-	        }
-        }
+        x_[i] = Y[i]*tW/W(i);
     }
 }
 

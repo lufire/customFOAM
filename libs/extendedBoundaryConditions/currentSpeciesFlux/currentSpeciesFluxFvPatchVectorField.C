@@ -151,8 +151,8 @@ void Foam::currentSpeciesFluxFvPatchVectorField::updateCoeffs()
         FatalErrorIn("currentSpeciesFluxFvPatchVectorField::updateCoeffs()")
             << "dimensions of i are not correct"
             << "\n    on patch " << this->patch().name()
-            << " of field " << this->dimensionedInternalField().name()
-            << " in file " << this->dimensionedInternalField().objectPath()
+            << " of field " << this->internalField().name()
+            << " in file " << this->internalField().objectPath()
             << exit(FatalError);
     }
 
@@ -169,11 +169,9 @@ void Foam::currentSpeciesFluxFvPatchVectorField::write(Ostream& os) const
         "i", 
         iName_
     );
-    os.writeKeyword("stoichCoeff") << stoichCoeff_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("electronNumber") << electronNumber_ 
-        << token::END_STATEMENT << nl;
-    writeEntry("value", os);
+    writeEntry(os, "stoichCoeff", stoichCoeff_);
+    writeEntry(os, "electronNumber", electronNumber_);
+    writeEntry(os, "value", *this);
 }
 
 

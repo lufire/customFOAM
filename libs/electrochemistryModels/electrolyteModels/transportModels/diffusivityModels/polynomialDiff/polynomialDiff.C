@@ -113,7 +113,7 @@ polynomialDiff::polynomialDiff
         DPoly_.set
         (
             specieI, 
-            new polynomial 
+            new Foam::Function1Types::Polynomial<scalar>
             (
                 "diffusivityCoeffs",
                 subdict
@@ -177,7 +177,7 @@ polynomialDiff::polynomialDiff
         DPoly_.set
         (
             specieI, 
-            new polynomial 
+            new Foam::Function1Types::Polynomial<scalar>
             (
                 "diffusivityCoeffs",
                 subdict
@@ -189,6 +189,7 @@ polynomialDiff::polynomialDiff
 
 
 //polynomialDiff::polynomialDiff
+//
 //(
 //    const dictionary& dict,
 //    const concReactionThermo& thermo,
@@ -227,7 +228,7 @@ polynomialDiff::polynomialDiff
 //        DPoly_.set
 //        (
 //            specieI, 
-//            new polynomial 
+//            new Foam::Function1Types::Polynomial<scalar>
 //            (
 //                "diffusivityCoeffs",
 //                subdict

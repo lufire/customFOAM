@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2019 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,7 +36,7 @@ SourceFiles
 #define concReactionThermo_H
 
 #include "rhoThermo.H"
-#include "concBasicMultiComponentMixture.H"
+#include "concBasicSpecieMixture.H"
 #include "autoPtr.H"
 #include "runTimeSelectionTables.H"
 
@@ -95,13 +95,13 @@ public:
     virtual ~concReactionThermo();
 
 
-    // Member functions
+    // Member Functions
 
         //- Return the composition of the multi-component mixture
-        virtual concBasicMultiComponentMixture& composition() = 0;
+        virtual concBasicSpecieMixture& composition() = 0;
 
         //- Return the composition of the multi-component mixture
-        virtual const concBasicMultiComponentMixture& composition() const = 0;
+        virtual const concBasicSpecieMixture& composition() const = 0;
 };
 
 

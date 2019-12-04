@@ -50,6 +50,7 @@ butlerVolmerCurrentFvPatchVectorField
     gammaReductant_(1.0),
     iEx_(0.0),
     eqPotential_(0.0),
+    electrodePotential_(0.0),
     alphaA_(1.0),
     alphaC_(1.0),
     nElectrons_(1)
@@ -96,20 +97,54 @@ butlerVolmerCurrentFvPatchVectorField
     electrodeName_(dict.lookupOrDefault<word>("electrodeName", "none")),
     phiEName_(dict.lookupOrDefault<word>("electricPotentialField", "phiE")),
     TName_(dict.lookupOrDefault<word>("temperatureField","T")),
-    oxidantName_(dict.lookup("oxidant")),
-    reductantName_(dict.lookup("reductant")),
-    CRefOxidant_(readScalar(dict.lookup("CRefOxidant"))),
-    CRefReductant_(readScalar(dict.lookup("CRefReductant"))),
-    gammaOxidant_(readScalar(dict.lookup("gammaOxidant"))),
-    gammaReductant_(readScalar(dict.lookup("gammaReductant"))),
-    iEx_(readScalar(dict.lookup("exchangeCurrentDensity"))),
-    eqPotential_(readScalar(dict.lookup("equilibriumPotential"))),
-    electrodePotential_(readScalar(dict.lookup("electrodePotential"))),
-    alphaA_(readScalar(dict.lookup("alphaA"))),
-    alphaC_(readScalar(dict.lookup("alphaC"))),
-    nElectrons_(readLabel(dict.lookup("electrons")))
+    //oxidantName_(dict.lookup("oxidant")),
+    //reductantName_(dict.lookup("reductant")),
+    //CRefOxidant_(readScalar(dict.lookup("CRefOxidant"))),
+    //CRefReductant_(readScalar(dict.lookup("CRefReductant"))),
+    //gammaOxidant_(readScalar(dict.lookup("gammaOxidant"))),
+    //gammaReductant_(readScalar(dict.lookup("gammaReductant"))),
+    //iEx_(readScalar(dict.lookup("exchangeCurrentDensity"))),
+    //eqPotential_(readScalar(dict.lookup("equilibriumPotential"))),
+    //electrodePotential_(readScalar(dict.lookup("electrodePotential"))),
+    //alphaA_(readScalar(dict.lookup("alphaA"))),
+    //alphaC_(readScalar(dict.lookup("alphaC"))),
+    //nElectrons_(readLabel(dict.lookup("electrons")))
+    oxidantName_("oxidant"),
+    reductantName_("reductant"),
+    CRefOxidant_(1.0),
+    CRefReductant_(1.0),
+    gammaOxidant_(1.0),
+    gammaReductant_(1.0),
+    iEx_(0.0),
+    eqPotential_(0.0),
+    electrodePotential_(0.0),
+    alphaA_(1.0),
+    alphaC_(1.0),
+    nElectrons_(1)
 {
     fvPatchVectorField::operator=(vectorField("value", dict, p.size()));
+    const dictionary& electrochemDict = 
+        db().lookupObject<IOdictionary>("electrochemicalProperties");
+    const dictionary electrodeDict = electrochemDict.subDict(electrodeName_);
+    oxidantName_ = electrodeDict.lookupType<word>("oxidant");
+    reductantName_ = electrodeDict.lookupType<word>("reductant"); 
+    const word oxName = oxidantName_;
+    const word redName = reductantName_;
+    CRefOxidant_ = 
+        electrodeDict.subDict("CRefs").lookupType<scalar>(oxName);
+    CRefReductant_ = 
+        electrodeDict.subDict("CRefs").lookupType<scalar>(redName);
+    gammaOxidant_ = 
+        electrodeDict.subDict("reactionOrders").lookupType<scalar>(oxName);
+    gammaReductant_ =
+        electrodeDict.subDict("reactionOrders").lookupType<scalar>(redName);
+    iEx_ = electrodeDict.lookupType<scalar>("exchangeCurrentDensity");
+    eqPotential_ = electrodeDict.lookupType<scalar>("equilibriumPotential");
+    electrodePotential_ = 
+        electrodeDict.lookupType<scalar>("electrodePotential");
+    alphaA_ = electrodeDict.lookupType<scalar>("alphaA");
+    alphaC_ = electrodeDict.lookupType<scalar>("alphaC");
+    nElectrons_ = electrodeDict.lookupType<label>("electrons");
 }
 
 
@@ -177,73 +212,34 @@ void Foam::butlerVolmerCurrentFvPatchVectorField::updateCoeffs()
     const scalar& R = constant::physicoChemical::R.value();
     const scalar& F = constant::physicoChemical::F.value();
 
-//     // Return const access to patch values of electric field
-//     const surfaceScalarField& phiEs =
-//         db().lookupObject<surfaceScalarField>(phiEName_);
-// 
-//     const fvsPatchField<scalar>& phiEp =
-//         patch().patchField<surfaceScalarField, scalar>(phiEs);
-
-
     // Return const access to internal cell values adjacent to
     // patch of electric field
     const volScalarField& phiE =
          db().lookupObject<volScalarField>(phiEName_); 
-
     const fvPatchField<scalar>& phiEp =
         patch().patchField<volScalarField, scalar>(phiE);
  
-//    const tmp<scalarField> tphiEpI =
-//          patch().patchInternalField(phiE.internalField());
-          
-
-//    const scalarField& phiEpI = tphiEpI();
-    
     // Return const access to internal cell values adjacent to 
     // patch of temperature
     const volScalarField& T =
         db().lookupObject<volScalarField>(TName_);
-        
     const fvPatchField<scalar>& Tp =
         patch().patchField<volScalarField, scalar>(T);
          
-//    const tmp<scalarField> tTpI =
-//        patch().patchInternalField(T.internalField());
-
-//    const scalarField& TpI = tTpI();
-
-    //const dictionary& electrochemicalProperties =
-    //    db().lookupObject<IOdictionary>("electrochemicalProperties");
-    //electrochemicalProperties.subDict(electrodeName_).lookup("");
-
     // Return const access to internal cell values adjacent to patch of oxidant
     // mass fraction
     const volScalarField& COxidant =
         db().lookupObject<volScalarField>("C_"+oxidantName_);
-               
-
     const fvPatchField<scalar>& COxidantp =
         patch().patchField<volScalarField, scalar>(COxidant);
 
-//    const tmp<scalarField> tYOxidantpI =
-//        patch().patchInternalField(YOxidant.internalField());
-
-//    const scalarField& YOxidantpI = tYOxidantpI();
-        
     // Return const access to internal cell values adjacent to patch of 
     // reductant mass fraction    
     const volScalarField& CReductant =
         db().lookupObject<volScalarField>("C_"+reductantName_);
-               
-
     const fvPatchField<scalar>& CReductantp =
         patch().patchField<volScalarField, scalar>(CReductant);
  
-//    const tmp<scalarField> tYReductantpI =
-//        patch().patchInternalField(YReductant.internalField());
-
-//    const scalarField& YReductantpI = tYReductantpI();
-    
     const tmp<vectorField>& tn = patch().nf();
     const vectorField& n = tn();
 //    const Field<scalar>& magS = patch().magSf();
@@ -306,8 +302,8 @@ void Foam::butlerVolmerCurrentFvPatchVectorField::updateCoeffs()
         FatalErrorIn("butlerVolmerCurrentFvPatchVectorField::updateCoeffs()")
             << "dimensions of phiE are not correct"
             << "\n    on patch " << this->patch().name()
-            << " of field " << this->dimensionedInternalField().name()
-            << " in file " << this->dimensionedInternalField().objectPath()
+            << " of field " << this->internalField().name()
+            << " in file " << this->internalField().objectPath()
             << exit(FatalError);
     }
 
@@ -318,45 +314,21 @@ void Foam::butlerVolmerCurrentFvPatchVectorField::updateCoeffs()
 void Foam::butlerVolmerCurrentFvPatchVectorField::write(Ostream& os) const
 {
     fvPatchVectorField::write(os);
-    writeEntryIfDifferent<word>
-    (
-        os, 
-        "electricPotentialField", 
-        "phiE", 
-        phiEName_
-    );
-    writeEntryIfDifferent<word>
-    (
-        os, 
-        "temperatureField", 
-        "T", 
-        TName_
-    );
-    os.writeKeyword("oxidant") << oxidantName_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("reductant") << reductantName_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("CRefOxidant") << CRefOxidant_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("CRefReductant") << CRefReductant_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("gammaOxidant") << gammaOxidant_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("gammaReductant") << gammaReductant_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("exchangeCurrentDensity") << iEx_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("equilibriumPotential") << eqPotential_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("electrodePotential") << electrodePotential_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("alphaA") << alphaA_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("alphaC") << alphaC_ 
-        << token::END_STATEMENT << nl;
-    os.writeKeyword("electrons") << nElectrons_ 
-        << token::END_STATEMENT << nl;
-    writeEntry("value", os);
+    writeEntry(os, "phiE", phiEName_);
+    writeEntry(os, "T", TName_);
+    writeEntry(os, "oxidant", oxidantName_);
+    writeEntry(os, "reductant", reductantName_);
+    writeEntry(os, "CRefOxidant", CRefOxidant_);
+    writeEntry(os, "CRefReductant", CRefReductant_);
+    writeEntry(os, "gammaOxidant", gammaOxidant_);
+    writeEntry(os, "gammaReductant", gammaReductant_);
+    writeEntry(os, "exchangeCurrentDensity", iEx_);
+    writeEntry(os, "equilibriumPotential", eqPotential_);
+    writeEntry(os, "electrodePotential", electrodePotential_);
+    writeEntry(os, "alphaA", alphaA_);
+    writeEntry(os, "alphaC", alphaC_);
+    writeEntry(os, "electrons", nElectrons_);
+    writeEntry(os, "value", *this);
 }
 
 
