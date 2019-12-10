@@ -1,5 +1,0 @@
-concChemistryModel/concChemistryModel.C
-concChemistryModel/concChemistryModels.C
-concChemistrySolver/makeConcChemistrySolvers.C
-
-LIB = $(FOAM_USER_LIBBIN)/libextendedChemistryModel
