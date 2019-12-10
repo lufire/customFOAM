@@ -24,38 +24,48 @@ boundaryField
 {
     inlet
     {
-        type            zeroGradient;
-        //type            fixedValue;
-        //value           uniform (0.0 0.0 0.0);
+        //type            zeroGradient;
+        type            fixedValue;
+        value           uniform (0.0 0.0 0.0);
     }
     outlet
     {
-        type            zeroGradient;
-        //type            fixedValue;
-        //value           uniform (0.0 0.0 0.0);
+        //type            zeroGradient;
+        type            fixedValue;
+        value           uniform (0.0 0.0 0.0);
     }
     
     currentCollector
     {
-        type            butlerVolmerCurrent;
-        value           uniform (0 0 0);        
+        type            butlerVolmerFixedCurrent;
         electrodeName   anode;
-        electricPotentialField  phiE;
-        temperatureField    T;        
-        oxidant         ZnOH4--;
-        reductant       OH-;
-        CRefOxidant     1000;       
-        CRefReductant   1000;        
-        gammaOxidant    1;
-        gammaReductant  4;
-        exchangeCurrentDensity  1e-2;
-        equilibriumPotential -0.469;
-        electrodePotential  -0.20;
-        alphaA          0.5;
-        alphaC          0.5;     
-        electrons       2;     
+        //type            fixedValue;
+        value           uniform (0 0 0);
+        //value           nonuniform List<vector> 
+        //20 
+        //(
+        //(1000 -0 -0)
+        //(1100 -0 -0)
+        //(1200 -0 -0)
+        //(1300 -0 -0)
+        //(1400 -0 -0)
+        //(1500 -0 -0)
+        //(1600 -0 -0)
+        //(1700 -0 -0)
+        //(1800 -0 -0)
+        //(1900 -0 -0)
+        //(2000 -0 -0)
+        //(2100 -0 -0)
+        //(2200 -0 -0)
+        //(2300 -0 -0)
+        //(2400 -0 -0)
+        //(2500 -0 -0)
+        //(2600 -0 -0)
+        //(2700 -0 -0)
+        //(2800 -0 -0)
+        //(2900 -0 -0)
+        //);
     }
-
     
     //currentCollector
     //{

@@ -35,6 +35,7 @@ boundaryField
     separator 
     {
         type            calculated;
+        value           $internalField;
         //type            zeroGradient;
         //type            fixedValue;
         //value           uniform (0.0 0.0 0.0);

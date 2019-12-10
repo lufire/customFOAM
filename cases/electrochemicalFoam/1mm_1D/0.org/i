@@ -31,9 +31,10 @@ boundaryField
     }
     currentCollector
     {
-        type            calculated;
-        //type            fixedValue;
-        //value           uniform (1000 0 0);
+        //type            butlerVolmerFixedPotential;
+        //electrodeName   anode;
+        type            fixedValue;
+        value           uniform (1000 0 0);
     }
     separator
     {

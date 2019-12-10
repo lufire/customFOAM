@@ -24,22 +24,26 @@ boundaryField
     inlet
     {
         type 		    calculated;
+        value           uniform 0.0;
         //type            fixedValue;
         //value           uniform 49805.49;
     }
     outlet
     {
         type 		    calculated;
+        value           uniform 0.0;
     }
     
     currentCollector
     {
         type            calculated;
+        value           uniform 0.0;
     }
 
     separator
     {
         type            calculated;
+        value           uniform 0.0;
     }    
  
     frontAndBack 

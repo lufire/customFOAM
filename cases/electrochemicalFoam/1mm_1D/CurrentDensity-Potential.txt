@@ -1,1 +1,2 @@
-Average cell current density: -0
+Average cell current density: -980
+Average electrode potential: 0

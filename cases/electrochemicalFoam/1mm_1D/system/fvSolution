@@ -177,23 +177,24 @@ PIMPLE
 {
     momentumPredictor no;
     nCorrectors     2;
-    nOuterCorrectors     10;
+    nOuterCorrectors     3;
     nNonOrthogonalCorrectors 0;
     pRefCell        0;
     pRefValue       0;
 }
 relaxationFactors
 {
-    fields
-    {
-        C      0.3;
-        phiE    0.3;
-    }
-    equations
-    {
-        "C|phiE"   0.3;
-        "(C|phiE)Final"    1.0;
-    }
+    //fields
+    //{
+    //    C      0.3;
+    //    //phiE    0.2;
+    //}
+    //equations
+    //{
+    //    C      0.9;
+    //    CFinal      0.0;
+    //    //phiE    0.2;
+    //}
 }
 
 

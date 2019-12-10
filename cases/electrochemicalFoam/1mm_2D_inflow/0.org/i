@@ -1,0 +1,73 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.2-devel                             |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object 	    i;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 -2 0 0 0 1 0];
+
+internalField   uniform (0.0 0.0 0.0);
+
+boundaryField
+{
+    inlet
+    {
+        //type            zeroGradient;
+        type            fixedValue;
+        value           uniform (0.0 0.0 0.0);
+    }
+    outlet
+    {
+        //type            zeroGradient;
+        type            fixedValue;
+        value           uniform (0.0 0.0 0.0);
+    }
+    
+    currentCollector
+    {
+        type            butlerVolmerFixedCurrent;
+        electrodeName   anode;
+        //type            fixedValue;
+        value           uniform (0 0 0);
+    }
+
+    
+    //currentCollector
+    //{
+    //    //type            fixedValue;
+    //    //value           uniform (1000.0 0.0 0.0);
+    //    type            calculated;
+    //}
+    
+
+    separator
+    {
+        //type            calculated;
+        type            zeroGradient;
+    }
+ 
+    frontAndBack 
+    {
+        type            empty;
+    }
+    wall 
+    {
+        //type            zeroGradient;
+        type            fixedValue;
+        value           uniform (0.0 0.0 0.0);
+    }    
+}
+
+// ************************************************************************* //

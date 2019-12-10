@@ -37,6 +37,7 @@ boundaryField
         //type            fixedValue;
         //value           uniform (0.0 0.0 0.0);
         type            calculated;
+        value           $internalField;
         //type            zeroGradient;
     }
 

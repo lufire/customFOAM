@@ -41,6 +41,7 @@ boundaryField
     {
         //type            zeroGradient;
         type            calculated;
+        value           $internalField;
     }
 
     frontAndBack 

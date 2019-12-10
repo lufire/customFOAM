@@ -1,0 +1,179 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.6                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    rho
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-08;
+        relTol          0;
+    }
+
+    rhoFinal
+    {
+	    $rho;
+	    tolerance 1e-12;
+	    relTol 0;
+    }
+    h
+    {
+        solver PBiCG;
+	    preconditioner DILU;
+	    tolerance 0;
+	    relTol 0.01;
+    }
+
+    hFinal
+    {
+	    $h;
+	    relTol 0;
+	    tolerance 1e-12;
+    }
+    "(phiEs|phiEl|p)"
+    {
+    	solver GAMG;
+    	tolerance 1e-08;
+    	relTol 0.01;
+    	smoother GaussSeidel;
+    	nPreSweeps 0;
+    	nPostSweeps 2;
+    	nFinestSweeps 2;
+    	cacheAgglomeration false;
+    	nCellsInCoarsestLevel 10;
+    	agglomerator faceAreaPair;
+    	mergeLevels 1;
+    }
+
+    "(phiEs|phiEl|p)Final"
+    {
+    	$p;
+    	tolerance 1e-12;
+    	relTol 0;
+    }
+//     //p
+//     "(phiEs|phiEl|p)"
+//     {
+//         solver          PCG;
+//         preconditioner  DIC;
+//         tolerance       1e-8;
+//         relTol          0;
+//     }
+// 
+//     //pFinal
+//     "(phiEs|phiEl|p)Final"
+//     {
+//         solver          PCG;
+//         preconditioner  DIC;
+//         tolerance       1e-10;
+//         relTol          0;
+//     }
+
+    //U
+    //{
+    //    solver          PBiCG;
+    //    preconditioner  DILU;
+    //    tolerance       1e-8;
+    //    relTol          0;
+    //}
+    phi
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-8;
+        relTol          0;
+    }
+    "U"
+    {
+        solver          PBiCG;
+        preconditioner  DILU;
+        tolerance       1e-08;
+        relTol          0.01;
+    }
+
+    "UFinal"
+    {
+        $U;
+        preconditioner  DILU;
+        tolerance       1e-10;
+        relTol          0;
+    }
+    "(voidfraction|Ksl|UsNext|voidfractionNext|sSmoothField|vSmoothField|fSmooth)"
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-09;
+        relTol          1e-02;
+    }
+    //"(Ci|ZnOH4--|OH-|HO2-|F-|K+|H2O)"
+    //{
+    // 	solver PBiCG;
+    // 	preconditioner DILU;
+    //     tolerance 1e-06;
+    //     relTol 0.01;
+    //}
+
+    //"(C_ZnOH4--|C_OH-|C_HO2-|C_F-|C_K+|C_H2O)Final"
+    //{	
+    //     $Ci;
+    //     preconditioner DILU;
+    //     tolerance 1e-10;
+    //     relTol 0.0;
+    //}
+    //"C_K+Final"
+    //{	
+    //     $Ci;
+    //     preconditioner DILU;
+    //     tolerance 1e-10;
+    //     relTol 0.0;
+    //}    
+       
+    Ci   
+    {
+    	solver GAMG;
+    	tolerance 1e-08;
+    	relTol 0.01;
+    	smoother GaussSeidel;
+    	nPreSweeps 0;
+    	nPostSweeps 2;
+    	nFinestSweeps 2;
+    	cacheAgglomeration false;
+    	nCellsInCoarsestLevel 10;
+    	agglomerator faceAreaPair;
+    	mergeLevels 1;
+    }
+
+    CiFinal
+    {
+    	$p;
+    	tolerance 1e-12;
+    	relTol 0;
+    }
+}
+
+PISO
+{
+    momentumPredictor no;
+    nCorrectors     3;
+    nNonOrthogonalCorrectors 1;
+    pRefCell        0;
+    pRefValue       0;
+}
+
+
+// ************************************************************************* //

@@ -17,10 +17,10 @@ FoamFile
 
 electrochemistry    on;
 
-currentControl  false;
+transportSolver concentrated;
+//transportSolver dilute;
 
-transportSolver concentrated;//dilute;
-
+currentControl  true;
 electrodes
 (
 //    anode 
@@ -31,16 +31,17 @@ anode
 {
     typeName        boundaryPatchElectrode;
     patchName       currentCollector;
-    currentControl  false;
+    currentControl  true;
     oxidant         ZnOH4--;
     reductant       OH-;
-    electronNumber  2;
-    exchangeCurrentDensity  1e-2;
+    electrons  2;
+    exchangeCurrentDensity  4e-2;
     equilibriumPotential -0.469;
-    potential       -0.340;
-    currentDensity  0;
+    potential       -0.200;
+    currentDensity  1000.0;
+    maxCurrentDensity  10000;
     alphaA          0.5;
-    alphaC          1.0;
+    alphaC          0.5;
     sigma 	        1e7;
     stoichCoeffs
     {
@@ -58,8 +59,8 @@ anode
     }
     CRefs
     {
-        ZnOH4--     1000;
-        OH-         1000;
+        ZnOH4--     200;
+        OH-         7000;
         K+          1000;
         H2O         1000;
     }
@@ -67,7 +68,7 @@ anode
     {
         typeName    porousLayer;
         initialPorosity     0.1;
-        initialThickness    2e-8;
+        initialThickness    1e-8;
         BruggemannCoeff      3.5;
     }
 }
@@ -121,13 +122,14 @@ electrolyteModel
     balanceSpecies          "K+";
     inertSpecies            "H2O";
     standardConcentration   Cstd [0 -3 0 0 1 0 0] 1000;
+    relativePermittivity   "epsilon" [0 0 0 0 0 0 0] 20;
     diffusivityModel
     {
-        typeName polynomialDiff;
+        typeName varyingDiff;
         ZnOH4--
         {
             referenceSpecie     K+;
-            diffusivityCoeffs polynomial [0 2 -1 0 0 0 0]
+            diffusivityCoeffs polynomial //[0 2 -1 0 0 0 0]
             (
                 (-9.33e-11 1)
                 (1.2e-9 0)
@@ -136,15 +138,16 @@ electrolyteModel
         OH- 
         {
             referenceSpecie     K+;
-            diffusivityCoeffs polynomial [0 2 -1 0 0 0 0]
+            diffusivityCoeffs polynomial //[0 2 -1 0 0 0 0]
             (
-                (2.0e-9 0)
+                (4.9e-9 0)
+                //(1.2e-9 0)
             );
         }
         K+ 
         {
             referenceSpecie     K+;
-            diffusivityCoeffs polynomial [0 2 -1 0 0 0 0]
+            diffusivityCoeffs polynomial //[0 2 -1 0 0 0 0]
             (
                 (1.2e-9 0)
             );
@@ -152,7 +155,7 @@ electrolyteModel
         H2O 
         {
             referenceSpecie     K+;
-            diffusivityCoeffs polynomial [0 2 -1 0 0 0 0]
+            diffusivityCoeffs polynomial //[0 2 -1 0 0 0 0]
             (
                 (2.3e-9 0)
             );
@@ -161,7 +164,10 @@ electrolyteModel
     conductivityModel
     {
         typeName linearMixture;
+        //typeName constant;
         //typeName NernstPlanck;
+        ionicConductivity "kappa" [-1 -3 3 0 0 2 0] 100;
+
         equivalentConductivity
         {
             K+-ZnOH4--  K+-ZnOH4--  [-1 0 3 0 -1 2 0] 7e-4;
@@ -171,13 +177,13 @@ electrolyteModel
     transferenceNumberModel
     {
         typeName speciesConductivity;
+
         speciesConductivity
         {
             ZnOH4--     ZnOH4--     [-1 0 3 0 -1 2 0] 118.96e-4;
             OH-         OH-         [-1 0 3 0 -1 2 0] 197.6e-4;
             K+          K+          [-1 0 3 0 -1 2 0] 73.52e-4;
         }
-    }
 }
 
 
