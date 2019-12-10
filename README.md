@@ -7,10 +7,10 @@ Prerequisites:
 
 Installation instructions:
 * Download or clone repository
-* In 'libs' directory:
+* In 'libs/specific_libs' directory:
   ```sh
   wclean all
-  wmake all
+  wmake
   ```
 * In 'solvers/specific_solver' directory:
   ```sh
